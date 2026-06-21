@@ -79,11 +79,10 @@ const DEMO_AUDIENCE = [
    STORAGE HELPERS
 --------------------------------------------------------------- */
 async function safeGet(key, shared) {
-  try { const res = await window.storage.get(key, shared); return res ? res.value : null; }
-  catch { return null; }
+  try { return localStorage.getItem(key); } catch { return null; }
 }
 async function safeSet(key, value, shared) {
-  try { await window.storage.set(key, value, shared); } catch {}
+  try { localStorage.setItem(key, value); } catch {}
 }
 
 /* ---------------------------------------------------------------
