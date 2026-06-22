@@ -256,7 +256,7 @@ animate={{
 }}
                 exit={{ opacity: 0, scale: 0.92, y: -6 }}
             transition={{
-  duration: 2,
+  duration: 0.5,
   ease: [0.16, 1, 0.3, 1]
 }}
                 className="absolute right-0 mt-3 w-[290px] rounded-2xl overflow-hidden z-50"
