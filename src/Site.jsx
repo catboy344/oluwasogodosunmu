@@ -168,8 +168,18 @@ const AboutMe = () => (
    MY WORLD NAV — burst animation
 --------------------------------------------------------------- */
 const BurstNav = ({ onSelectSpace }) => {
-  const [phase, setPhase] = useState("closed"); // closed | burst | list
+  const [phase, setPhase] = useState("closed");
   const ref = useRef(null);
+
+  // 👇 put it here
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 900);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     const onClick = (e) => {
@@ -181,28 +191,30 @@ const BurstNav = ({ onSelectSpace }) => {
     return () => document.removeEventListener("mousedown", onClick);
   }, [phase]);
 
-  const handleToggle = () => {
-    if (phase === "closed") {
-      setPhase("burst");
-    setTimeout(() => {
-  setPhase("list");
-}, 1200);
-    } else {
-      setPhase("closed");
-    }
-  };
-
   // positions where items scatter to (relative to button)
-   const burstPositions = [
-  { x: -240, y: 120 }, // far left
-  { x: -160, y: 180 }, // left outer
-  { x: -80,  y: 250 }, // left inner
-  { x: 0,    y: 300 }, // center bottom
-  { x: 80,   y: 250 }, // right inner
-  { x: 160,  y: 180 }, // right outer
-  { x: 240,  y: 120 }, // far right
-];
+const burstPositions = (i) => {
+  const mobileSpread = [
+{ x: -70, y: 120 },
+{ x: -110, y: 190 },
+{ x: -150, y: 260 },
+    { x: -150, y: 300 },
+    { x: -180, y: 240 },
+    { x: -210, y: 180 },
+    { x: -240, y: 120 },
+  ];
 
+  const desktopSpread = [
+    { x: -240, y: 120 },
+    { x: -160, y: 180 },
+    { x: -80,  y: 250 },
+    { x: 0,    y: 300 },
+    { x: 80,   y: 250 },
+    { x: 160,  y: 180 },
+    { x: 240,  y: 120 },
+  ];
+
+  return isMobile ? mobileSpread[i] : desktopSpread[i];
+};
   return (
     <div className="relative" ref={ref}>
       <button
@@ -224,7 +236,12 @@ const BurstNav = ({ onSelectSpace }) => {
               <motion.div
                 key={`burst-${s.id}`}
                 initial={{ x: 0, y: 0, opacity: 0, scale: 0.5 }}
-                animate={{ x: burstPositions[i].x, y: burstPositions[i].y, opacity: 1, scale: 1 }}
+               animate={{
+  x: burstPositions(i).x,
+  y: burstPositions(i).y,
+  opacity: 1,
+  scale: 1
+}}
                 exit={{ opacity: 0 }}
              transition={{
   duration: 0.9,
