@@ -13,8 +13,8 @@ import { createClient } from '@supabase/supabase-js';
 // 🔁 REPLACE THESE WITH YOUR ACTUAL VALUES
 const SUPABASE_URL = "https://mzhccgxxbznvinqyvust.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aGNjZ3h4YnpudmlucXl2dXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzkwMTAsImV4cCI6MjA5NzgxNTAxMH0.z-KNumdmNKaXyYYgWGFo1ZIxNMPc31rNvGqvdIlMbFU";
-
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
 // ==================================================
 
 const FontLoader = () => {
