@@ -316,9 +316,9 @@ const Photos = () => {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
- const stored = lsGet("cloudinary_photos");
-if (stored) setPhotos(JSON.parse(stored));
-  }, []);
+sb.from("photos").select("*").then(({ data }) => {
+  if (data) setPhotos(data);
+});
 
 const handleFiles = async (e) => {
   const files = Array.from(e.target.files);
