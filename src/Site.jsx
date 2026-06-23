@@ -102,10 +102,11 @@ const Gallery = () => {
 
         if (data && data.length > 0) {
           // Map to the shape the gallery expects: { src, name }
-          const mapped = data.map((p) => ({
-            src: p.url,      // adjust if your column is named differently
-            name: p.name || p.title || "Photo",  // fallback
-          }));
+       const mapped = data.map((p) => ({
+  src: p.url,
+  name: p.name || p.title || "Photo",
+  type: p.type || 'photo',  // ← Add this line
+}));
           setPhotos(mapped);
         }
       } catch (err) {
@@ -176,23 +177,34 @@ const Gallery = () => {
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
             className="absolute inset-0"
           >
-            {photos.length > 0 ? (
-              <img
-                src={slides[idx].src}
-                alt={slides[idx].name || "Gallery photo"}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center" style={{ background: slides[idx].bg }}>
-                <div className="w-24 h-24 rounded-full flex items-center justify-center font-fraunces font-black text-3xl"
-                  style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)" }}>
-                  OD
-                </div>
-                <p className="font-body text-[11px] tracking-[0.35em] uppercase mt-4" style={{ color: "rgba(255,255,255,0.45)" }}>{slides[idx].label}</p>
-                <div className="absolute bottom-0 left-0 right-0 h-32" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.5),transparent)" }} />
-                <p className="absolute bottom-5 left-5 font-body text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>Add your photo in admin</p>
-              </div>
-            )}
+           {photos.length > 0 ? (
+  slides[idx].type === 'video' ? (
+    <video
+      src={slides[idx].src}
+      className="w-full h-full object-cover"
+      autoPlay
+      muted
+      loop
+      playsInline
+    />
+  ) : (
+    <img
+      src={slides[idx].src}
+      alt={slides[idx].name || "Gallery photo"}
+      className="w-full h-full object-cover"
+    />
+  )
+) : (
+  <div className="w-full h-full flex flex-col items-center justify-center" style={{ background: slides[idx].bg }}>
+    <div className="w-24 h-24 rounded-full flex items-center justify-center font-fraunces font-black text-3xl"
+      style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)" }}>
+      OD
+    </div>
+    <p className="font-body text-[11px] tracking-[0.35em] uppercase mt-4" style={{ color: "rgba(255,255,255,0.45)" }}>{slides[idx].label}</p>
+    <div className="absolute bottom-0 left-0 right-0 h-32" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.5),transparent)" }} />
+    <p className="absolute bottom-5 left-5 font-body text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>Add your photo in admin</p>
+  </div>
+)}
           </motion.div>
         </AnimatePresence>
 
