@@ -7,6 +7,16 @@ import {
   Quote
 } from "lucide-react";
 
+// ==================== SUPABASE ====================
+import { createClient } from '@supabase/supabase-js';
+
+// 🔁 REPLACE THESE WITH YOUR ACTUAL VALUES
+const SUPABASE_URL = "https://mzhccgxxbznvinqyvust.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aGNjZ3h4YnpudmlucXl2dXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzkwMTAsImV4cCI6MjA5NzgxNTAxMH0.z-KNumdmNKaXyYYgWGFo1ZIxNMPc31rNvGqvdIlMbFU";
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+// ==================================================
+
 const FontLoader = () => {
   useEffect(() => {
     const link = document.createElement("link");
@@ -59,7 +69,6 @@ const sampleContent = (space) => {
 const AD_SLOTS = ["New Release", "Podcast Premiere", "Upcoming Event", "Merch Drop", "Featured Sermon", "Book Tour"];
 const STATS = [{ n: "7", label: "Spaces" }, { n: "2+", label: "Books" }, { n: "∞", label: "Impact" }];
 
-// ← MOVED UP so Gallery can see it
 const GLOW_COLORS = [
   "#7C3AED", "#2563EB", "#059669", "#DC2626",
   "#E8B23D", "#E85D9E", "#38BDB0",
@@ -69,7 +78,7 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch { return null;
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
 
 /* ---------------------------------------------------------------
-   AUTO-SWIPING GALLERY
+   AUTO-SWIPING GALLERY (FIXED)
 --------------------------------------------------------------- */
 const Gallery = () => {
   const [photos, setPhotos] = useState([]);
@@ -77,14 +86,36 @@ const Gallery = () => {
   const [dir, setDir] = useState(1);
   const [glowIdx, setGlowIdx] = useState(0);
 
-useEffect(() => {
-  sb.from("photos").select("*").then(({ data }) => {
-    if (data && data.length > 0) {
-      setCloudPhotos(data.map(p => ({ src: p.url, name: p.name })));
-    }
-  });
-}, []);
-  
+  // Load photos from Supabase
+  useEffect(() => {
+    const loadPhotos = async () => {
+      try {
+        const { data, error } = await sb
+          .from("photos")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Supabase error loading photos:", error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Map to the shape the gallery expects: { src, name }
+          const mapped = data.map((p) => ({
+            src: p.url,      // adjust if your column is named differently
+            name: p.name || p.title || "Photo",  // fallback
+          }));
+          setPhotos(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load photos:", err);
+      }
+    };
+
+    loadPhotos();
+  }, []);
+
   const slides = photos.length > 0 ? photos : SLIDES;
   const total = slides.length;
 
@@ -184,7 +215,7 @@ useEffect(() => {
 };
 
 /* ---------------------------------------------------------------
-   ABOUT ME
+   ABOUT ME (unchanged)
 --------------------------------------------------------------- */
 const AboutMe = () => (
   <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="flex-1 flex flex-col justify-center py-4 min-w-0">
@@ -222,7 +253,7 @@ const AboutMe = () => (
 );
 
 /* ---------------------------------------------------------------
-   MY WORLD NAV — burst animation
+   BURST NAV (unchanged)
 --------------------------------------------------------------- */
 const BurstNav = ({ onSelectSpace }) => {
   const [phase, setPhase] = useState("closed");
@@ -327,7 +358,7 @@ const BurstNav = ({ onSelectSpace }) => {
 };
 
 /* ---------------------------------------------------------------
-   NAV
+   NAV (unchanged)
 --------------------------------------------------------------- */
 const Nav = ({ onSelectSpace, onGoHome }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -351,7 +382,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
 };
 
 /* ---------------------------------------------------------------
-   DODGING AUTH MODAL
+   AUTH MODAL (unchanged)
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth }) => {
   const [mode, setMode] = useState("signup");
@@ -458,7 +489,7 @@ const AuthModal = ({ onClose, onAuth }) => {
 };
 
 /* ---------------------------------------------------------------
-   ENGAGEMENT
+   ENGAGEMENT (unchanged)
 --------------------------------------------------------------- */
 const Engagement = ({ contentId, user, accent }) => {
   const [data, setData] = useState({ likes: 0, comments: [] });
@@ -503,7 +534,7 @@ const Engagement = ({ contentId, user, accent }) => {
 };
 
 /* ---------------------------------------------------------------
-   SPACE VIEW
+   SPACE VIEW (unchanged)
 --------------------------------------------------------------- */
 const SpaceView = ({ space, user, onBack }) => {
   const content = sampleContent(space);
@@ -558,7 +589,7 @@ const SpaceView = ({ space, user, onBack }) => {
 };
 
 /* ---------------------------------------------------------------
-   HOMEPAGE
+   HOMEPAGE (unchanged)
 --------------------------------------------------------------- */
 const Homepage = () => (
   <div style={{ background: "#07080C", minHeight: "100vh" }}>
@@ -616,7 +647,6 @@ const Homepage = () => (
     </footer>
   </div>
 );
-
 /* ---------------------------------------------------------------
    ROOT
 --------------------------------------------------------------- */
