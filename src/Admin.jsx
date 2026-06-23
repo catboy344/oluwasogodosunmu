@@ -341,13 +341,10 @@ const handleFiles = async (e) => {
   e.target.value = "";
 };
 
-  const deletePhoto = (id) => {
-    setPhotos(prev => {
-      const updated = prev.filter(p => p.id !== id);
-      lsSet("cloudinary_photos", JSON.stringify(updated));
-      return updated;
-    });
-  };
+const deletePhoto = async (id) => {
+  await sb.from("photos").delete({ id });
+  setPhotos(prev => prev.filter(p => p.id !== id));
+};
 
   return (
     <div>
