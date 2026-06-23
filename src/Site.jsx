@@ -456,15 +456,15 @@ const SpaceView = ({ space, user, onBack }) => {
   const content = sampleContent(space);
   return (
     <div className="min-h-screen" style={{ background: "#07080C" }}>
+      <button
+        onClick={onBack}
+        className="fixed top-5 left-5 z-50 flex items-center gap-2 font-body text-[13px] px-4 py-2.5 rounded-full"
+        style={{ color: "white", background: "rgba(20,20,28,0.92)", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}
+      >
+        <ArrowLeft size={14} /> Back
+      </button>
       <div className="relative pt-24 pb-16 px-6 md:px-10 text-center" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 0%, ${space.accent}25, transparent)` }} />
-        <button
-          onClick={onBack}
-          className="absolute top-6 left-6 z-20 flex items-center gap-2 font-body text-[13px] px-4 py-2 rounded-full"
-          style={{ color: "white", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}
-        >
-          <ArrowLeft size={14} /> Back
-        </button>
         <div className="relative">
           <div className="text-4xl mb-3">{space.emoji}</div>
           <p className="font-body text-[10.5px] tracking-[0.3em] uppercase mb-2" style={{ color: space.accent }}>{space.tag}</p>
