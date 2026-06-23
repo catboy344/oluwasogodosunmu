@@ -123,7 +123,7 @@ const AboutMe = () => (
     {/* top label */}
     <div className="flex items-center gap-3 mb-6">
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
-      <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>About Me</p>
+     <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>Behind the Words</p>
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
     </div>
 
