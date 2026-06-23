@@ -6,38 +6,11 @@ import {
   Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand,
   CheckCircle2, Clock, Image, X, Eye
 } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
+
 const SUPABASE_URL = "https://mzhccgxxbznvinqyvust.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aGNjZ3h4YnpudmlucXl2dXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzkwMTAsImV4cCI6MjA5NzgxNTAxMH0.z-KNumdmNKaXyYYgWGFo1ZIxNMPc31rNvGqvdIlMbFU";
-
-const sb = {
-  from: (table) => ({
-    select: async (cols = "*") => {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${cols}&order=created_at.desc`, {
-        headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` }
-      });
-      const data = await res.json();
-      return { data, error: !res.ok ? data : null };
-    },
-    insert: async (row) => {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-        method: "POST",
-        headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}`, "Content-Type": "application/json", Prefer: "return=representation" },
-        body: JSON.stringify(row)
-      });
-      const data = await res.json();
-      return { data, error: !res.ok ? data : null };
-    },
-    delete: async (match) => {
-      const [col, val] = Object.entries(match)[0];
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, {
-        method: "DELETE",
-        headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` }
-      });
-      return { error: !res.ok ? await res.json() : null };
-    },
-  })
-};
-
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 /* ---------------------------------------------------------------
    FONTS — same as main site
 --------------------------------------------------------------- */
