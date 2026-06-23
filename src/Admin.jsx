@@ -294,27 +294,35 @@ const Photos = () => {
     });
   }, []);
 
-  const handleFiles = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setUploading(true);
-    for (let i = 0; i < files.length; i++) {
-      try {
-        const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
-        const { data } = await sb.from("photos").insert({
-          url,
-          public_id: publicId,
-          name: files[i].name,
-        });
-        if (data) setPhotos(prev => [...prev, data[0]]);
-      } catch (err) {
-        console.error("Upload failed:", err);
+const handleFiles = async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  setUploading(true);
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
+      const { data, error } = await sb.from("photos").insert({
+        url,
+        public_id: publicId,
+        name: files[i].name,
+      });
+      
+      if (error) {
+        console.error("Supabase insert error:", error);
+        continue;
       }
+      
+      // ✅ FIX: data is an array, get the first item
+      if (data && data.length > 0) {
+        setPhotos(prev => [...prev, data[0]]);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
     }
-    setUploading(false);
-    e.target.value = "";
-  };
-
+  }
+  setUploading(false);
+  e.target.value = "";
+};
   const deletePhoto = async (id) => {
     await sb.from("photos").delete({ id });
     setPhotos(prev => prev.filter(p => p.id !== id));
