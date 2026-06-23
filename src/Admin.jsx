@@ -1,48 +1,63 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock, LayoutDashboard, UploadCloud, FolderOpen, CreditCard, Users,
-  Heart, MessageCircle, TrendingUp, DollarSign, Trash2, LogOut,
-  Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand, CheckCircle2, Clock
+  Heart, MessageCircle, DollarSign, Trash2, LogOut,
+  Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand,
+  CheckCircle2, Clock, Image, X, Eye
 } from "lucide-react";
 
 /* ---------------------------------------------------------------
-   FONTS + TOKENS (matches main site)
+   FONTS — same as main site
 --------------------------------------------------------------- */
 const FontLoader = () => {
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Outfit:wght@300;400;500;600&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap";
     document.head.appendChild(link);
     return () => { try { document.head.removeChild(link); } catch {} };
   }, []);
   return null;
 };
 
+/* ---------------------------------------------------------------
+   TOKENS — matches main site
+--------------------------------------------------------------- */
 const C = {
-  bg: "#050505",
-  panel: "#0D0D0D",
-  panelAlt: "#101010",
-  ivory: "#F4EFE6",
-  ivoryDim: "#B5AFA2",
-  faint: "#6E6A60",
-  gold: "#C9A24B",
-  hairline: "rgba(201,162,75,0.18)",
-  hairlineSoft: "rgba(255,255,255,0.07)",
-  good: "#7FB88A",
-  warn: "#D9A441",
+  bg: "#07080C",
+  surface: "#0E1015",
+  surfaceHi: "#151820",
+  border: "rgba(255,255,255,0.08)",
+  borderHi: "rgba(255,255,255,0.14)",
+  white: "white",
+  dim: "rgba(255,255,255,0.6)",
+  faint: "rgba(255,255,255,0.3)",
+  fainter: "rgba(255,255,255,0.12)",
+  emerald: "#3DD68C",
+  gold: "#E8B23D",
+  rose: "#E85D9E",
+  violet: "#7C3AED",
+  blue: "#2563EB",
+  amber: "#F2944D",
+  teal: "#38BDB0",
+  good: "#3DD68C",
+  warn: "#E8B23D",
+  bad: "#E85D9E",
 };
 
-const ADMIN_PASSWORD = "sogo2026"; // demo only — replace with real auth at deploy
+const ACCENT_COLORS = [C.violet, C.blue, C.emerald, C.bad, C.gold, C.amber, C.teal];
+
+const ADMIN_PASSWORD = "John+2558";
 
 const SPACES = [
-  { id: "whispers", title: "Whispers with Oluwasogo", Icon: Mic, type: "audio" },
-  { id: "speaks", title: "Sogo Speaks", Icon: Video, type: "video" },
-  { id: "healingpen", title: "The Healing Pen", Icon: BookOpen, type: "book" },
-  { id: "poetry", title: "Poetry", Icon: PenTool, type: "poetry" },
-  { id: "preaches", title: "Sogo Preaches", Icon: Church, type: "video" },
-  { id: "presence", title: "In His Presence", Icon: Sparkles, type: "video" },
-  { id: "holyghost", title: "The Holy Ghost in Action", Icon: Hand, type: "video" },
+  { id: "whispers", title: "Whispers with Oluwasogo", Icon: Mic, type: "audio", accent: C.teal },
+  { id: "speaks", title: "Sogo Speaks", Icon: Video, type: "video", accent: C.gold },
+  { id: "healingpen", title: "The Healing Pen", Icon: BookOpen, type: "book", accent: C.rose },
+  { id: "poetry", title: "Poetry", Icon: PenTool, type: "poetry", accent: "#9B82F0" },
+  { id: "preaches", title: "Sogo Preaches", Icon: Church, type: "video", accent: C.amber },
+  { id: "presence", title: "In His Presence", Icon: Sparkles, type: "video", accent: "#F25C9C" },
+  { id: "holyghost", title: "The Holy Ghost in Action", Icon: Hand, type: "video", accent: C.emerald },
 ];
 
 const DEFAULT_CONTENT = [
@@ -76,59 +91,74 @@ const DEMO_AUDIENCE = [
 ];
 
 /* ---------------------------------------------------------------
-   STORAGE HELPERS
+   STORAGE
 --------------------------------------------------------------- */
-async function safeGet(key, shared) {
-  try { return localStorage.getItem(key); } catch { return null; }
-}
-async function safeSet(key, value, shared) {
-  try { localStorage.setItem(key, value); } catch {}
-}
+function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
 
 /* ---------------------------------------------------------------
-   LOGIN GATE
+   LOGIN
 --------------------------------------------------------------- */
 const AdminLogin = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [blobs] = useState([
+    { color: C.violet, top: "10%", left: "60%", size: 400 },
+    { color: C.blue, top: "65%", left: "-5%", size: 360 },
+    { color: C.emerald, top: "80%", left: "75%", size: 320 },
+  ]);
 
   const submit = (e) => {
     e.preventDefault();
     if (password.trim().toLowerCase() === ADMIN_PASSWORD) onSuccess();
-    else setError(true);
+    else { setError(true); setTimeout(() => setError(false), 1800); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5" style={{ background: C.bg }}>
-      <div className="w-full max-w-sm p-8" style={{ background: C.panel, border: `1px solid ${C.hairline}` }}>
-        <div className="w-12 h-12 flex items-center justify-center mb-6" style={{ border: `1px solid ${C.gold}` }}>
-          <Lock size={18} color={C.gold} />
+    <div className="min-h-screen flex items-center justify-center px-5 relative overflow-hidden" style={{ background: C.bg }}>
+      {blobs.map((b, i) => (
+        <motion.div key={i} className="absolute rounded-full pointer-events-none"
+          style={{ top: b.top, left: b.left, width: b.size, height: b.size, background: b.color, opacity: 0.15, filter: "blur(120px)" }}
+          animate={{ x: [0, 25, -15, 0], y: [0, -20, 15, 0] }}
+          transition={{ duration: 18 + i * 4, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm p-8 rounded-3xl relative z-10"
+        style={{ background: C.surface, border: `1px solid ${C.border}` }}
+      >
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6" style={{ background: `${C.violet}22`, border: `1px solid ${C.violet}44` }}>
+          <Lock size={18} color={C.violet} />
         </div>
-        <p className="font-body text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: C.gold }}>Private</p>
-        <h1 className="font-display text-2xl mb-7" style={{ color: C.ivory }}>Admin Access</h1>
+        <p className="font-body text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: C.violet }}>Private Access</p>
+        <h1 className="font-fraunces text-2xl font-bold mb-7" style={{ color: C.white }}>Admin Dashboard</h1>
 
         <form onSubmit={submit} className="space-y-3">
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Admin password"
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck="false"
-            className="w-full bg-transparent outline-none font-body text-sm px-3.5 py-3"
-            style={{ border: `1px solid ${error ? "#C25450" : C.hairline}`, color: C.ivory }}
-          />
-          {error && <p className="font-body text-[12px]" style={{ color: "#C25450" }}>Incorrect password — try again.</p>}
-          <button type="submit" className="w-full py-3 font-body text-sm tracking-wide" style={{ background: C.gold, color: "#1A1304", fontWeight: 600 }}>
+          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: C.fainter, border: `1px solid ${error ? C.bad : C.border}` }}>
+            <Lock size={14} color={C.faint} />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Admin password"
+              autoCapitalize="none" autoCorrect="off" autoComplete="off"
+              className="bg-transparent outline-none w-full font-body text-[13.5px]"
+              style={{ color: C.white }}
+            />
+          </div>
+          {error && (
+            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="font-body text-[12px]" style={{ color: C.bad }}>
+              Incorrect password — try again.
+            </motion.p>
+          )}
+          <button type="submit" className="w-full py-3.5 rounded-2xl font-body text-[14px] font-semibold" style={{ background: `linear-gradient(135deg, ${C.violet}, ${C.blue})`, color: "white" }}>
             Enter Dashboard
           </button>
         </form>
-        <p className="font-body text-[11px] mt-6 leading-relaxed" style={{ color: C.faint }}>
-          Demo password: <span style={{ color: C.ivoryDim }}>sogo2026</span>. This swaps for a real, private login once we deploy.
-        </p>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -136,15 +166,20 @@ const AdminLogin = ({ onSuccess }) => {
 /* ---------------------------------------------------------------
    STAT CARD
 --------------------------------------------------------------- */
-const StatCard = ({ label, value, Icon, sub }) => (
-  <div className="p-5" style={{ background: C.panel, border: `1px solid ${C.hairline}` }}>
+const StatCard = ({ label, value, Icon, accent, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}
+    className="p-5 rounded-2xl"
+    style={{ background: C.surface, border: `1px solid ${C.border}` }}
+  >
     <div className="flex items-center justify-between mb-4">
-      <span className="font-body text-[11px] tracking-[0.2em] uppercase" style={{ color: C.faint }}>{label}</span>
-      <Icon size={15} color={C.gold} />
+      <span className="font-body text-[11px] tracking-[0.15em] uppercase" style={{ color: C.faint }}>{label}</span>
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${accent}22` }}>
+        <Icon size={14} color={accent} />
+      </div>
     </div>
-    <p className="font-display text-3xl" style={{ color: C.ivory }}>{value}</p>
-    {sub && <p className="font-body text-[11.5px] mt-1.5" style={{ color: C.faint }}>{sub}</p>}
-  </div>
+    <p className="font-fraunces font-black text-3xl" style={{ color: C.white }}>{value}</p>
+  </motion.div>
 );
 
 /* ---------------------------------------------------------------
@@ -153,41 +188,141 @@ const StatCard = ({ label, value, Icon, sub }) => (
 const Overview = ({ allContent, engagement }) => {
   const totalLikes = Object.values(engagement).reduce((s, e) => s + (e?.likes || 0), 0);
   const totalComments = Object.values(engagement).reduce((s, e) => s + (e?.comments?.length || 0), 0);
-  const revenue = DEMO_PAYMENTS.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount.replace(/[₦,]/g, "")), 0);
+  const revenue = DEMO_PAYMENTS.filter(p => p.status === "paid").reduce((s, p) => s + Number(p.amount.replace(/[₦,]/g, "")), 0);
 
   return (
     <div>
-      <h2 className="font-display text-2xl mb-1" style={{ color: C.ivory }}>Overview</h2>
+      <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Overview</h2>
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>A snapshot of everything happening across your world.</p>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <StatCard label="Total Likes" value={totalLikes} Icon={Heart} sub="Across all spaces" />
-        <StatCard label="Total Comments" value={totalComments} Icon={MessageCircle} sub="Across all spaces" />
-        <StatCard label="Signed-up Users" value={DEMO_AUDIENCE.length} Icon={Users} sub="Demo data for now" />
-        <StatCard label="Revenue" value={`₦${revenue.toLocaleString()}`} Icon={DollarSign} sub="From book sales" />
+        <StatCard label="Total Likes" value={totalLikes} Icon={Heart} accent={C.rose} delay={0} />
+        <StatCard label="Comments" value={totalComments} Icon={MessageCircle} accent={C.violet} delay={0.06} />
+        <StatCard label="Audience" value={DEMO_AUDIENCE.length} Icon={Users} accent={C.teal} delay={0.12} />
+        <StatCard label="Revenue" value={`₦${revenue.toLocaleString()}`} Icon={DollarSign} accent={C.gold} delay={0.18} />
       </div>
 
-      <h3 className="font-body text-[11px] tracking-[0.25em] uppercase mb-4" style={{ color: C.gold }}>Engagement by Space</h3>
-      <div className="space-y-2">
-        {SPACES.map((s) => {
-          const items = allContent.filter((c) => c.spaceId === s.id);
+      <h3 className="font-body text-[11px] tracking-[0.2em] uppercase mb-4" style={{ color: C.faint }}>By Space</h3>
+      <div className="space-y-1">
+        {SPACES.map((s, i) => {
+          const items = allContent.filter(c => c.spaceId === s.id);
           const likes = items.reduce((sum, it) => sum + (engagement[it.id]?.likes || 0), 0);
           const comments = items.reduce((sum, it) => sum + (engagement[it.id]?.comments?.length || 0), 0);
           return (
-            <div key={s.id} className="flex items-center justify-between py-3.5" style={{ borderBottom: `1px solid ${C.hairlineSoft}` }}>
+            <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+              className="flex items-center justify-between py-3.5 px-4 rounded-xl"
+              style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
+            >
               <div className="flex items-center gap-3">
-                <s.Icon size={15} color={C.gold} />
-                <span className="font-body text-[13.5px]" style={{ color: C.ivory }}>{s.title}</span>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${s.accent}22` }}>
+                  <s.Icon size={13} color={s.accent} />
+                </div>
+                <span className="font-body text-[13px]" style={{ color: C.dim }}>{s.title}</span>
               </div>
-              <div className="flex items-center gap-5 font-body text-[12.5px]" style={{ color: C.faint }}>
-                <span className="flex items-center gap-1.5"><Heart size={13} /> {likes}</span>
-                <span className="flex items-center gap-1.5"><MessageCircle size={13} /> {comments}</span>
+              <div className="flex items-center gap-5 font-body text-[12px]" style={{ color: C.faint }}>
+                <span className="flex items-center gap-1"><Heart size={12} /> {likes}</span>
+                <span className="flex items-center gap-1"><MessageCircle size={12} /> {comments}</span>
                 <span>{items.length} uploads</span>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
+    </div>
+  );
+};
+
+/* ---------------------------------------------------------------
+   PHOTOS — new section to manage gallery photos
+--------------------------------------------------------------- */
+const Photos = () => {
+  const [photos, setPhotos] = useState([]);
+  const [previews, setPreviews] = useState([]);
+
+  useEffect(() => {
+    const stored = lsGet("admin_photos");
+    if (stored) setPhotos(JSON.parse(stored));
+  }, []);
+
+  const handleFiles = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const newPhoto = { id: `photo-${Date.now()}-${Math.random()}`, name: file.name, src: ev.target.result, addedAt: new Date().toLocaleDateString() };
+        setPhotos(prev => {
+          const updated = [...prev, newPhoto];
+          lsSet("admin_photos", JSON.stringify(updated));
+          return updated;
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const deletePhoto = (id) => {
+    setPhotos(prev => {
+      const updated = prev.filter(p => p.id !== id);
+      lsSet("admin_photos", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  return (
+    <div>
+      <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Gallery Photos</h2>
+      <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
+        Upload your photos here — they'll appear in the swiping gallery on your homepage.
+        <br />
+        <span style={{ color: C.warn }}>Note: photos save in your browser for now. Connect Cloudinary at deploy for permanent storage.</span>
+      </p>
+
+      {/* Upload zone */}
+      <label
+        className="flex flex-col items-center justify-center gap-3 py-12 rounded-2xl cursor-pointer mb-7 transition-colors"
+        style={{ border: `2px dashed ${C.border}`, background: C.fainter }}
+        onDragOver={e => e.preventDefault()}
+      >
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: `${C.violet}22` }}>
+          <Image size={20} color={C.violet} />
+        </div>
+        <div className="text-center">
+          <p className="font-body text-[14px] font-medium" style={{ color: C.dim }}>Click to upload photos</p>
+          <p className="font-body text-[12px] mt-1" style={{ color: C.faint }}>JPG, PNG, WEBP — multiple at once</p>
+        </div>
+        <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+      </label>
+
+      {/* Photo grid */}
+      {photos.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="font-body text-[13px]" style={{ color: C.faint }}>No photos yet — upload your first one above.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {photos.map((photo, i) => (
+            <motion.div key={photo.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
+              className="relative group rounded-2xl overflow-hidden"
+              style={{ aspectRatio: "3/4", background: C.surface }}
+            >
+              <img src={photo.src} alt={photo.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" style={{ background: "rgba(0,0,0,0.6)" }}>
+                <button
+                  onClick={() => deletePhoto(photo.id)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ background: `${C.bad}22`, border: `1px solid ${C.bad}44` }}
+                >
+                  <Trash2 size={14} color={C.bad} />
+                </button>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-2" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)" }}>
+                <p className="font-body text-[9.5px] truncate" style={{ color: "rgba(255,255,255,0.5)" }}>{photo.addedAt}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -202,20 +337,12 @@ const UploadContent = ({ onUpload }) => {
   const [price, setPrice] = useState("");
   const [fileName, setFileName] = useState("");
   const [success, setSuccess] = useState(false);
-
-  const space = SPACES.find((s) => s.id === spaceId);
+  const space = SPACES.find(s => s.id === spaceId);
 
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-    const newItem = {
-      id: `${spaceId}-custom-${Date.now()}`,
-      spaceId,
-      title: title.trim(),
-      meta: meta.trim() || (space.type === "audio" ? "Audio" : space.type === "book" ? "Book" : "Video"),
-      price: space.type === "book" ? price : undefined,
-      fileName: fileName || "(no file attached — connect storage at deploy)",
-    };
+    const newItem = { id: `${spaceId}-custom-${Date.now()}`, spaceId, title: title.trim(), meta: meta.trim() || "New content", price: space.type === "book" ? price : undefined, fileName: fileName || "No file attached yet" };
     await onUpload(newItem);
     setTitle(""); setMeta(""); setPrice(""); setFileName("");
     setSuccess(true);
@@ -224,64 +351,49 @@ const UploadContent = ({ onUpload }) => {
 
   return (
     <div className="max-w-xl">
-      <h2 className="font-display text-2xl mb-1" style={{ color: C.ivory }}>Upload Content</h2>
+      <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Upload Content</h2>
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-        Add a new piece to one of your spaces. Metadata saves now; real file storage connects when we deploy.
+        Add a new piece to one of your spaces. Real file storage connects when we deploy.
       </p>
 
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-5">
         <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.gold }}>Space</label>
-          <select
-            value={spaceId}
-            onChange={(e) => setSpaceId(e.target.value)}
-            className="w-full bg-transparent outline-none font-body text-sm px-3.5 py-3"
-            style={{ border: `1px solid ${C.hairline}`, color: C.ivory }}
-          >
-            {SPACES.map((s) => (
-              <option key={s.id} value={s.id} style={{ background: C.panel }}>{s.title}</option>
-            ))}
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Space</label>
+          <select value={spaceId} onChange={e => setSpaceId(e.target.value)} className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl appearance-none" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }}>
+            {SPACES.map(s => <option key={s.id} value={s.id} style={{ background: C.surface }}>{s.title}</option>)}
           </select>
         </div>
 
-        <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.gold }}>Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Letters I Never Sent" className="w-full bg-transparent outline-none font-body text-sm px-3.5 py-3" style={{ border: `1px solid ${C.hairline}`, color: C.ivory }} />
-        </div>
-
-        <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.gold }}>Description / Duration</label>
-          <input value={meta} onChange={(e) => setMeta(e.target.value)} placeholder="e.g. 24 min · Episode 03" className="w-full bg-transparent outline-none font-body text-sm px-3.5 py-3" style={{ border: `1px solid ${C.hairline}`, color: C.ivory }} />
-        </div>
+        {[["Title", title, setTitle, "e.g. Episode 03 — Finding Peace"],
+          ["Description / Duration", meta, setMeta, "e.g. 24 min · Episode 03"]
+        ].map(([label, val, setter, placeholder]) => (
+          <div key={label}>
+            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>{label}</label>
+            <input value={val} onChange={e => setter(e.target.value)} placeholder={placeholder} className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+          </div>
+        ))}
 
         {space.type === "book" && (
           <div>
-            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.gold }}>Price</label>
-            <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. ₦3,500" className="w-full bg-transparent outline-none font-body text-sm px-3.5 py-3" style={{ border: `1px solid ${C.hairline}`, color: C.ivory }} />
+            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Price</label>
+            <input value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. ₦3,500" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
           </div>
         )}
 
         <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.gold }}>File</label>
-          <label
-            className="flex flex-col items-center justify-center gap-2 py-8 cursor-pointer"
-            style={{ border: `1px dashed ${C.hairline}` }}
-          >
-            <UploadCloud size={20} color={C.gold} />
-            <span className="font-body text-[12.5px]" style={{ color: C.ivoryDim }}>
-              {fileName ? fileName : `Click to choose ${space.type === "audio" ? "an audio" : space.type === "book" ? "a PDF" : "a video"} file`}
-            </span>
-            <input type="file" className="hidden" onChange={(e) => setFileName(e.target.files?.[0]?.name || "")} />
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>File</label>
+          <label className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl cursor-pointer" style={{ border: `2px dashed ${C.border}`, background: C.fainter }}>
+            <UploadCloud size={20} color={space.accent} />
+            <span className="font-body text-[12.5px]" style={{ color: C.dim }}>{fileName || `Choose a ${space.type === "audio" ? "audio" : space.type === "book" ? "PDF" : "video"} file`}</span>
+            <input type="file" className="hidden" onChange={e => setFileName(e.target.files?.[0]?.name || "")} />
           </label>
-          <p className="font-body text-[10.5px] mt-2" style={{ color: C.faint }}>
-            Files aren't stored yet in this preview — real upload connects to Cloudinary/Supabase at deploy.
-          </p>
+          <p className="font-body text-[10.5px] mt-2" style={{ color: C.faint }}>Real upload connects to Cloudinary at deploy.</p>
         </div>
 
-        <button type="submit" className="px-6 py-3 font-body text-sm tracking-wide" style={{ background: C.gold, color: "#1A1304", fontWeight: 600 }}>
+        <button type="submit" className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white" }}>
           Save Content
         </button>
-        {success && <p className="font-body text-[12.5px]" style={{ color: C.good }}>Saved — visible in Manage Content.</p>}
+        {success && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-body text-[12.5px]" style={{ color: C.good }}>✓ Saved — visible in Manage Content.</motion.p>}
       </form>
     </div>
   );
@@ -292,46 +404,51 @@ const UploadContent = ({ onUpload }) => {
 --------------------------------------------------------------- */
 const ManageContent = ({ allContent, engagement, onDelete }) => {
   const [filter, setFilter] = useState("all");
-  const filtered = filter === "all" ? allContent : allContent.filter((c) => c.spaceId === filter);
+  const filtered = filter === "all" ? allContent : allContent.filter(c => c.spaceId === filter);
 
   return (
     <div>
-      <h2 className="font-display text-2xl mb-1" style={{ color: C.ivory }}>Manage Content</h2>
-      <p className="font-body text-[13px] mb-6" style={{ color: C.faint }}>Everything you've published, with live likes and comments.</p>
+      <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Manage Content</h2>
+      <p className="font-body text-[13px] mb-6" style={{ color: C.faint }}>Everything you've published, with live engagement numbers.</p>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.gold : C.hairline}`, color: filter === "all" ? C.gold : C.faint }}>All</button>
-        {SPACES.map((s) => (
-          <button key={s.id} onClick={() => setFilter(s.id)} className="px-3.5 py-1.5 font-body text-[12px]" style={{ border: `1px solid ${filter === s.id ? C.gold : C.hairline}`, color: filter === s.id ? C.gold : C.faint }}>
+        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.violet : C.border}`, color: filter === "all" ? C.violet : C.faint, background: filter === "all" ? `${C.violet}14` : "transparent" }}>All</button>
+        {SPACES.map(s => (
+          <button key={s.id} onClick={() => setFilter(s.id)} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === s.id ? s.accent : C.border}`, color: filter === s.id ? s.accent : C.faint, background: filter === s.id ? `${s.accent}14` : "transparent" }}>
             {s.title}
           </button>
         ))}
       </div>
 
-      <div className="space-y-2">
-        {filtered.map((item) => {
+      <div className="space-y-1">
+        {filtered.map((item, i) => {
           const e = engagement[item.id] || { likes: 0, comments: [] };
-          const space = SPACES.find((s) => s.id === item.spaceId);
+          const space = SPACES.find(s => s.id === item.spaceId);
           const isCustom = item.id.includes("-custom-");
           return (
-            <div key={item.id} className="flex items-center justify-between py-4 px-1" style={{ borderBottom: `1px solid ${C.hairlineSoft}` }}>
+            <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              className="flex items-center justify-between py-4 px-4 rounded-xl"
+              style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
+            >
               <div className="flex items-center gap-3 min-w-0">
-                <space.Icon size={15} color={C.gold} className="shrink-0" />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
+                  <space.Icon size={13} color={space.accent} />
+                </div>
                 <div className="min-w-0">
-                  <p className="font-body text-[13.5px] truncate" style={{ color: C.ivory }}>{item.title}</p>
+                  <p className="font-body text-[13.5px] truncate" style={{ color: C.white }}>{item.title}</p>
                   <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{space.title} · {item.meta}{item.price ? ` · ${item.price}` : ""}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 shrink-0">
-                <span className="hidden sm:flex items-center gap-1.5 font-body text-[12px]" style={{ color: C.faint }}><Heart size={13} /> {e.likes}</span>
-                <span className="hidden sm:flex items-center gap-1.5 font-body text-[12px]" style={{ color: C.faint }}><MessageCircle size={13} /> {e.comments.length}</span>
+                <span className="hidden sm:flex items-center gap-1 font-body text-[12px]" style={{ color: C.faint }}><Heart size={12} /> {e.likes}</span>
+                <span className="hidden sm:flex items-center gap-1 font-body text-[12px]" style={{ color: C.faint }}><MessageCircle size={12} /> {e.comments.length}</span>
                 {isCustom && (
-                  <button onClick={() => onDelete(item.id)} style={{ color: C.faint }}>
-                    <Trash2 size={15} />
+                  <button onClick={() => onDelete(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${C.bad}14` }}>
+                    <Trash2 size={13} color={C.bad} />
                   </button>
                 )}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -343,37 +460,35 @@ const ManageContent = ({ allContent, engagement, onDelete }) => {
    PAYMENTS
 --------------------------------------------------------------- */
 const Payments = () => {
-  const revenue = DEMO_PAYMENTS.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount.replace(/[₦,]/g, "")), 0);
+  const revenue = DEMO_PAYMENTS.filter(p => p.status === "paid").reduce((s, p) => s + Number(p.amount.replace(/[₦,]/g, "")), 0);
   return (
     <div>
-      <h2 className="font-display text-2xl mb-1" style={{ color: C.ivory }}>Payments</h2>
-      <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-        Demo data — real transactions appear here once Paystack is connected at deploy.
-      </p>
+      <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Payments</h2>
+      <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>Demo data — real transactions appear once Paystack is connected.</p>
 
-      <div className="p-5 mb-7" style={{ background: C.panel, border: `1px solid ${C.hairline}` }}>
+      <div className="p-6 rounded-2xl mb-7" style={{ background: `linear-gradient(135deg, ${C.violet}22, ${C.blue}14)`, border: `1px solid ${C.violet}33` }}>
         <p className="font-body text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: C.faint }}>Total Revenue</p>
-        <p className="font-display text-4xl" style={{ color: C.ivory }}>₦{revenue.toLocaleString()}</p>
+        <p className="font-fraunces font-black text-4xl" style={{ color: C.white }}>₦{revenue.toLocaleString()}</p>
       </div>
 
-      <div className="space-y-2">
-        {DEMO_PAYMENTS.map((p) => (
-          <div key={p.id} className="flex items-center justify-between py-4" style={{ borderBottom: `1px solid ${C.hairlineSoft}` }}>
+      <div className="space-y-1">
+        {DEMO_PAYMENTS.map((p, i) => (
+          <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+            className="flex items-center justify-between py-4 px-4 rounded-xl"
+            style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
+          >
             <div>
-              <p className="font-body text-[13.5px]" style={{ color: C.ivory }}>{p.buyer}</p>
+              <p className="font-body text-[13.5px]" style={{ color: C.white }}>{p.buyer}</p>
               <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{p.item} · {p.date}</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="font-body text-[13.5px]" style={{ color: C.ivory }}>{p.amount}</span>
-              <span className="flex items-center gap-1.5 font-body text-[11.5px] px-2.5 py-1" style={{
-                color: p.status === "paid" ? C.good : C.warn,
-                border: `1px solid ${p.status === "paid" ? C.good : C.warn}`,
-              }}>
-                {p.status === "paid" ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+              <span className="font-fraunces font-bold text-[15px]" style={{ color: C.white }}>{p.amount}</span>
+              <span className="flex items-center gap-1.5 font-body text-[11.5px] px-3 py-1 rounded-full" style={{ color: p.status === "paid" ? C.good : C.warn, background: p.status === "paid" ? `${C.good}14` : `${C.warn}14`, border: `1px solid ${p.status === "paid" ? C.good : C.warn}33` }}>
+                {p.status === "paid" ? <CheckCircle2 size={11} /> : <Clock size={11} />}
                 {p.status}
               </span>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -385,19 +500,25 @@ const Payments = () => {
 --------------------------------------------------------------- */
 const Audience = () => (
   <div>
-    <h2 className="font-display text-2xl mb-1" style={{ color: C.ivory }}>Audience</h2>
-    <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-      Demo data — a real, live list populates here once a shared database (Supabase) is connected at deploy.
-    </p>
-    <div className="space-y-2">
+    <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Audience</h2>
+    <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>Demo data — real list populates once Supabase is connected.</p>
+    <div className="space-y-1">
       {DEMO_AUDIENCE.map((u, i) => (
-        <div key={i} className="flex items-center justify-between py-4" style={{ borderBottom: `1px solid ${C.hairlineSoft}` }}>
-          <div>
-            <p className="font-body text-[13.5px]" style={{ color: C.ivory }}>{u.name}</p>
-            <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{u.email}</p>
+        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+          className="flex items-center justify-between py-4 px-4 rounded-xl"
+          style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center font-fraunces font-bold text-[13px]" style={{ background: `${ACCENT_COLORS[i % ACCENT_COLORS.length]}22`, color: ACCENT_COLORS[i % ACCENT_COLORS.length] }}>
+              {u.name[0]}
+            </div>
+            <div>
+              <p className="font-body text-[13.5px]" style={{ color: C.white }}>{u.name}</p>
+              <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{u.email}</p>
+            </div>
           </div>
           <span className="font-body text-[12px]" style={{ color: C.faint }}>Joined {u.joined}</span>
-        </div>
+        </motion.div>
       ))}
     </div>
   </div>
@@ -406,8 +527,9 @@ const Audience = () => (
 /* ---------------------------------------------------------------
    ROOT
 --------------------------------------------------------------- */
-const NAV = [
+const NAV_ITEMS = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
+  { id: "photos", label: "Gallery Photos", Icon: Image },
   { id: "upload", label: "Upload Content", Icon: UploadCloud },
   { id: "manage", label: "Manage Content", Icon: FolderOpen },
   { id: "payments", label: "Payments", Icon: CreditCard },
@@ -422,45 +544,40 @@ export default function Admin() {
   const [engagement, setEngagement] = useState({});
 
   useEffect(() => {
-    (async () => {
-      const session = await safeGet("admin-session", false);
-      if (session === "true") setAuthed(true);
-      const stored = await safeGet("admin_content", true);
-      if (stored) setCustomContent(JSON.parse(stored));
-      setBooted(true);
-    })();
+    const session = lsGet("admin-session");
+    if (session === "true") setAuthed(true);
+    const stored = lsGet("admin_content");
+    if (stored) setCustomContent(JSON.parse(stored));
+    setBooted(true);
   }, []);
 
   const allContent = [...DEFAULT_CONTENT, ...customContent];
 
   useEffect(() => {
     if (!authed) return;
-    (async () => {
-      const results = {};
-      for (const item of allContent) {
-        const raw = await safeGet(`engage_${item.id}`, true);
-        results[item.id] = raw ? JSON.parse(raw) : { likes: 0, comments: [] };
-      }
-      setEngagement(results);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const results = {};
+    allContent.forEach(item => {
+      const raw = lsGet(`engage_${item.id}`);
+      results[item.id] = raw ? JSON.parse(raw) : { likes: 0, comments: [] };
+    });
+    setEngagement(results);
   }, [authed, customContent.length]);
 
-  const handleLogin = async () => { setAuthed(true); await safeSet("admin-session", "true", false); };
-  const handleLogout = async () => { setAuthed(false); await safeSet("admin-session", "", false); };
+  const handleLogin = () => { setAuthed(true); lsSet("admin-session", "true"); };
+  const handleLogout = () => { setAuthed(false); lsSet("admin-session", ""); };
 
   const handleUpload = useCallback(async (item) => {
-    setCustomContent((prev) => {
+    setCustomContent(prev => {
       const next = [...prev, item];
-      safeSet("admin_content", JSON.stringify(next), true);
+      lsSet("admin_content", JSON.stringify(next));
       return next;
     });
   }, []);
 
   const handleDelete = useCallback(async (id) => {
-    setCustomContent((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      safeSet("admin_content", JSON.stringify(next), true);
+    setCustomContent(prev => {
+      const next = prev.filter(c => c.id !== id);
+      lsSet("admin_content", JSON.stringify(next));
       return next;
     });
   }, []);
@@ -471,47 +588,58 @@ export default function Admin() {
     <div style={{ background: C.bg, minHeight: "100vh" }}>
       <FontLoader />
       <style>{`
-        .font-display { font-family: 'Playfair Display', serif; }
+        .font-fraunces { font-family: 'Fraunces', serif; }
         .font-body { font-family: 'Outfit', sans-serif; }
-        select option { background: ${C.panel}; }
+        * { box-sizing: border-box; }
+        ::selection { background: rgba(124,58,237,0.4); }
       `}</style>
 
       {!authed ? (
         <AdminLogin onSuccess={handleLogin} />
       ) : (
         <div className="flex flex-col md:flex-row min-h-screen">
-          <aside className="md:w-[230px] shrink-0 md:min-h-screen p-5" style={{ background: C.panel, borderRight: `1px solid ${C.hairline}` }}>
-            <p className="font-display text-lg mb-1" style={{ color: C.ivory }}>Oluwasogo Dosunmu</p>
-            <p className="font-body text-[10.5px] tracking-[0.2em] uppercase mb-7" style={{ color: C.gold }}>Admin Panel</p>
+          {/* SIDEBAR */}
+          <aside className="md:w-[220px] shrink-0 md:min-h-screen p-5 flex flex-col" style={{ background: C.surface, borderRight: `1px solid ${C.border}` }}>
+            <div className="mb-8">
+              <p className="font-fraunces font-bold text-[17px]" style={{ color: C.white }}>Oluwasogo Dosunmu</p>
+              <p className="font-body text-[10.5px] tracking-[0.2em] uppercase mt-1" style={{ color: C.violet }}>Admin Panel</p>
+            </div>
 
-            <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
-              {NAV.map((n) => (
+            <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible flex-1">
+              {NAV_ITEMS.map(n => (
                 <button
                   key={n.id}
                   onClick={() => setTab(n.id)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 font-body text-[13px] whitespace-nowrap"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-body text-[13px] whitespace-nowrap transition-all"
                   style={{
-                    color: tab === n.id ? C.gold : C.ivoryDim,
-                    background: tab === n.id ? "rgba(201,162,75,0.08)" : "transparent",
-                    borderLeft: `2px solid ${tab === n.id ? C.gold : "transparent"}`,
+                    color: tab === n.id ? C.white : C.faint,
+                    background: tab === n.id ? `${C.violet}22` : "transparent",
+                    border: tab === n.id ? `1px solid ${C.violet}33` : "1px solid transparent",
                   }}
                 >
-                  <n.Icon size={15} /> {n.label}
+                  <n.Icon size={15} color={tab === n.id ? C.violet : C.faint} />
+                  {n.label}
                 </button>
               ))}
             </nav>
 
-            <button onClick={handleLogout} className="flex items-center gap-2 font-body text-[12px] mt-8" style={{ color: C.faint }}>
+            <button onClick={handleLogout} className="flex items-center gap-2 font-body text-[12px] mt-6 px-3 py-2.5 rounded-xl" style={{ color: C.faint, background: "transparent" }}>
               <LogOut size={13} /> Log out
             </button>
           </aside>
 
-          <main className="flex-1 p-6 md:p-10">
-            {tab === "overview" && <Overview allContent={allContent} engagement={engagement} />}
-            {tab === "upload" && <UploadContent onUpload={handleUpload} />}
-            {tab === "manage" && <ManageContent allContent={allContent} engagement={engagement} onDelete={handleDelete} />}
-            {tab === "payments" && <Payments />}
-            {tab === "audience" && <Audience />}
+          {/* MAIN */}
+          <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+            <AnimatePresence mode="wait">
+              <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                {tab === "overview" && <Overview allContent={allContent} engagement={engagement} />}
+                {tab === "photos" && <Photos />}
+                {tab === "upload" && <UploadContent onUpload={handleUpload} />}
+                {tab === "manage" && <ManageContent allContent={allContent} engagement={engagement} onDelete={handleDelete} />}
+                {tab === "payments" && <Payments />}
+                {tab === "audience" && <Audience />}
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
       )}
