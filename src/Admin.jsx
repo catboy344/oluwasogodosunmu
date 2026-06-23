@@ -102,65 +102,25 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
 const AdminLogin = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
-  const [blobs] = useState([
-    { color: C.violet, top: "10%", left: "60%", size: 400 },
-    { color: C.blue, top: "65%", left: "-5%", size: 360 },
-    { color: C.emerald, top: "80%", left: "75%", size: 320 },
-  ]);
 
   const submit = (e) => {
     e.preventDefault();
-    if (password.trim().toLowerCase() === ADMIN_PASSWORD) onSuccess();
-    else { setError(true); setTimeout(() => setError(false), 1800); }
+
+    const enteredPassword = password.trim();
+
+    if (enteredPassword === ADMIN_PASSWORD) {
+      onSuccess();
+      return;
+    }
+
+    setError(true);
+
+    setTimeout(() => {
+      setError(false);
+    }, 1800);
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center px-5 relative overflow-hidden" style={{ background: C.bg }}>
-      {blobs.map((b, i) => (
-        <motion.div key={i} className="absolute rounded-full pointer-events-none"
-          style={{ top: b.top, left: b.left, width: b.size, height: b.size, background: b.color, opacity: 0.15, filter: "blur(120px)" }}
-          animate={{ x: [0, 25, -15, 0], y: [0, -20, 15, 0] }}
-          transition={{ duration: 18 + i * 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm p-8 rounded-3xl relative z-10"
-        style={{ background: C.surface, border: `1px solid ${C.border}` }}
-      >
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6" style={{ background: `${C.violet}22`, border: `1px solid ${C.violet}44` }}>
-          <Lock size={18} color={C.violet} />
-        </div>
-        <p className="font-body text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: C.violet }}>Private Access</p>
-        <h1 className="font-fraunces text-2xl font-bold mb-7" style={{ color: C.white }}>Admin Dashboard</h1>
-
-        <form onSubmit={submit} className="space-y-3">
-          <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: C.fainter, border: `1px solid ${error ? C.bad : C.border}` }}>
-            <Lock size={14} color={C.faint} />
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Admin password"
-              autoCapitalize="none" autoCorrect="off" autoComplete="off"
-              className="bg-transparent outline-none w-full font-body text-[13.5px]"
-              style={{ color: C.white }}
-            />
-          </div>
-          {error && (
-            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="font-body text-[12px]" style={{ color: C.bad }}>
-              Incorrect password — try again.
-            </motion.p>
-          )}
-          <button type="submit" className="w-full py-3.5 rounded-2xl font-body text-[14px] font-semibold" style={{ background: `linear-gradient(135deg, ${C.violet}, ${C.blue})`, color: "white" }}>
-            Enter Dashboard
-          </button>
-        </form>
-      </motion.div>
-    </div>
-  );
+  // return (...)
 };
 
 /* ---------------------------------------------------------------
