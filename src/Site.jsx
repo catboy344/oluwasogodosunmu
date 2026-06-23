@@ -78,20 +78,11 @@ const Gallery = () => {
   const [glowIdx, setGlowIdx] = useState(0);
 
 useEffect(() => {
-  fetch(
-    `https://res.cloudinary.com/mm0gviif/image/list/gallery.json`
-  )
-    .then(res => res.json())
-    .then(data => {
-      if (data.resources && data.resources.length > 0) {
-        const imgs = data.resources.map(r => ({
-          src: `https://res.cloudinary.com/mm0gviif/image/upload/${r.public_id}.jpg`,
-          name: r.public_id,
-        }));
-        setCloudPhotos(imgs);
-      }
-    })
-    .catch(() => {});
+  sb.from("photos").select("*").then(({ data }) => {
+    if (data && data.length > 0) {
+      setCloudPhotos(data.map(p => ({ src: p.url, name: p.name })));
+    }
+  });
 }, []);
   
   const slides = photos.length > 0 ? photos : SLIDES;
