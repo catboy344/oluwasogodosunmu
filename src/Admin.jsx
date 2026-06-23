@@ -288,11 +288,41 @@ const Photos = () => {
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    sb.from("photos").select("*").then(({ data }) => {
-      if (data) setPhotos(data);
-    });
-  }, []);
+const handleFiles = async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  setUploading(true);
+  for (let i = 0; i < files.length; i++) {
+    try {
+      const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
+      
+      // Insert into Supabase
+      const { data, error } = await sb
+        .from("photos")
+        .insert({
+          url: url,
+          public_id: publicId,
+          name: files[i].name,
+        })
+        .select(); // ← This returns the inserted data
+      
+      if (error) {
+        console.error("Supabase error:", error);
+        alert("Upload failed: " + error.message);
+        continue;
+      }
+      
+      if (data && data.length > 0) {
+        setPhotos(prev => [...prev, data[0]]);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Upload failed: " + err.message);
+    }
+  }
+  setUploading(false);
+  e.target.value = "";
+};
 
 const handleFiles = async (e) => {
   const files = Array.from(e.target.files);
@@ -301,23 +331,29 @@ const handleFiles = async (e) => {
   for (let i = 0; i < files.length; i++) {
     try {
       const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
-      const { data, error } = await sb.from("photos").insert({
-        url,
-        public_id: publicId,
-        name: files[i].name,
-      });
+      
+      // Insert into Supabase
+      const { data, error } = await sb
+        .from("photos")
+        .insert({
+          url: url,
+          public_id: publicId,
+          name: files[i].name,
+        })
+        .select(); // ← This returns the inserted data
       
       if (error) {
-        console.error("Supabase insert error:", error);
+        console.error("Supabase error:", error);
+        alert("Upload failed: " + error.message);
         continue;
       }
       
-      // ✅ FIX: data is an array, get the first item
       if (data && data.length > 0) {
         setPhotos(prev => [...prev, data[0]]);
       }
     } catch (err) {
       console.error("Upload failed:", err);
+      alert("Upload failed: " + err.message);
     }
   }
   setUploading(false);
