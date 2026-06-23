@@ -71,7 +71,6 @@ const Gallery = () => {
   const [dir, setDir] = useState(1);
   const [glowIdx, setGlowIdx] = useState(0);
 
-  // Load photos from admin localStorage
   useEffect(() => {
     const stored = lsGet("admin_photos");
     if (stored) {
@@ -79,13 +78,13 @@ const Gallery = () => {
     }
   }, []);
 
-  const slides = photos.length > 0 ? photos : SLIDES; // fallback to gradients if no photos yet
+  const slides = photos.length > 0 ? photos : SLIDES;
   const total = slides.length;
 
   const goTo = (next) => { setDir(next > idx ? 1 : -1); setIdx(next); };
 
   useEffect(() => {
-    setIdx(0); // reset when photos load
+    setIdx(0);
   }, [photos.length]);
 
   useEffect(() => {
@@ -140,14 +139,12 @@ const Gallery = () => {
             className="absolute inset-0"
           >
             {photos.length > 0 ? (
-              // Real photo from admin
               <img
                 src={slides[idx].src}
                 alt={slides[idx].name || "Gallery photo"}
                 className="w-full h-full object-cover"
               />
             ) : (
-              // Fallback gradient placeholder
               <div className="w-full h-full flex flex-col items-center justify-center" style={{ background: slides[idx].bg }}>
                 <div className="w-24 h-24 rounded-full flex items-center justify-center font-fraunces font-black text-3xl"
                   style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)" }}>
