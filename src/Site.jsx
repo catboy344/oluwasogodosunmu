@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand,
   Heart, MessageCircle, X, Instagram, Youtube, Facebook, Twitter, Send,
@@ -58,6 +58,12 @@ const sampleContent = (space) => {
 
 const AD_SLOTS = ["New Release", "Podcast Premiere", "Upcoming Event", "Merch Drop", "Featured Sermon", "Book Tour"];
 const STATS = [{ n: "7", label: "Spaces" }, { n: "2+", label: "Books" }, { n: "∞", label: "Impact" }];
+
+// ← MOVED UP so Gallery can see it
+const GLOW_COLORS = [
+  "#7C3AED", "#2563EB", "#059669", "#DC2626",
+  "#E8B23D", "#E85D9E", "#38BDB0",
+];
 
 function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
@@ -177,44 +183,32 @@ const Gallery = () => {
 };
 
 /* ---------------------------------------------------------------
-   ABOUT ME — structured, designed, not just text
+   ABOUT ME
 --------------------------------------------------------------- */
 const AboutMe = () => (
   <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="flex-1 flex flex-col justify-center py-4 min-w-0">
-
-    {/* top label */}
     <div className="flex items-center gap-3 mb-6">
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
-   <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>Behind the Words</p>
+      <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>Behind the Words</p>
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
     </div>
-
-    {/* name */}
     <h1 className="font-fraunces font-black leading-[1.0] mb-5" style={{ fontSize: "clamp(2.2rem,5vw,3.4rem)", color: "white" }}>
       Oluwasogo<br />Dosunmu
     </h1>
-
-    {/* role badges */}
     <div className="flex flex-wrap gap-2 mb-7">
       {[["Author", "#7C3AED"], ["Poet", "#2563EB"], ["Speaker", "#059669"], ["Visionary", "#DC2626"]].map(([r, c]) => (
         <span key={r} className="px-3 py-1.5 rounded-full font-body text-[11px] font-medium" style={{ background: `${c}22`, color: c, border: `1px solid ${c}44` }}>{r}</span>
       ))}
     </div>
-
-    {/* big quote pull */}
     <div className="relative mb-7 pl-5" style={{ borderLeft: "3px solid rgba(255,255,255,0.15)" }}>
       <Quote size={18} color="rgba(255,255,255,0.2)" className="mb-2" />
       <p className="font-fraunces italic text-[18px] md:text-[21px] leading-[1.6]" style={{ color: "rgba(255,255,255,0.85)" }}>
         Every creation has the power to leave a lasting impact.
       </p>
     </div>
-
-    {/* body */}
     <p className="font-body text-[13.5px] leading-[1.85]" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 480 }}>
       I am an author, poet, speaker, and creative visionary passionate about inspiring lives through words, faith, and music. Through books, poetry, sermons, prayer sessions, and motivational messages, I seek to inspire hope, ignite purpose, and point people toward God.
     </p>
-
-    {/* stats row */}
     <div className="flex items-center gap-6 mt-8 pt-7" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
       {STATS.map((s, i) => (
         <div key={i}>
@@ -230,7 +224,7 @@ const AboutMe = () => (
    MY WORLD NAV — burst animation
 --------------------------------------------------------------- */
 const BurstNav = ({ onSelectSpace }) => {
-  const [phase, setPhase] = useState("closed"); // closed | burst | list
+  const [phase, setPhase] = useState("closed");
   const ref = useRef(null);
 
   useEffect(() => {
@@ -246,24 +240,21 @@ const BurstNav = ({ onSelectSpace }) => {
   const handleToggle = () => {
     if (phase === "closed") {
       setPhase("burst");
-    setTimeout(() => {
-  setPhase("list");
-}, 1200);
+      setTimeout(() => { setPhase("list"); }, 1200);
     } else {
       setPhase("closed");
     }
   };
 
-  // positions where items scatter to (relative to button)
-   const burstPositions = [
-  { x: -240, y: 120 }, // far left
-  { x: -160, y: 180 }, // left outer
-  { x: -80,  y: 250 }, // left inner
-  { x: 0,    y: 300 }, // center bottom
-  { x: 80,   y: 250 }, // right inner
-  { x: 160,  y: 180 }, // right outer
-  { x: 240,  y: 120 }, // far right
-];
+  const burstPositions = [
+    { x: -240, y: 120 },
+    { x: -160, y: 180 },
+    { x: -80,  y: 250 },
+    { x: 0,    y: 300 },
+    { x: 80,   y: 250 },
+    { x: 160,  y: 180 },
+    { x: 240,  y: 120 },
+  ];
 
   return (
     <div className="relative" ref={ref}>
@@ -281,21 +272,14 @@ const BurstNav = ({ onSelectSpace }) => {
       <AnimatePresence>
         {(phase === "burst" || phase === "list") && (
           <>
-            {/* BURST PHASE — items scatter around button */}
             {phase === "burst" && SPACES.map((s, i) => (
               <motion.div
                 key={`burst-${s.id}`}
                 initial={{ x: 0, y: 0, opacity: 0, scale: 0.5 }}
                 animate={{ x: burstPositions[i].x, y: burstPositions[i].y, opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-             transition={{
-  duration: 0.9,
-  delay: i * 0.04,
-  type: "spring",
-  stiffness: 120,
-  damping: 12
-}}
-              className="absolute top-12 right-0 z-50 flex items-center gap-1.5 px-3 py-2 rounded-2xl pointer-events-none"
+                transition={{ duration: 0.9, delay: i * 0.04, type: "spring", stiffness: 120, damping: 12 }}
+                className="absolute top-12 right-0 z-50 flex items-center gap-1.5 px-3 py-2 rounded-2xl pointer-events-none"
                 style={{ background: `${s.accent}22`, border: `1px solid ${s.accent}55`, whiteSpace: "nowrap" }}
               >
                 <s.Icon size={13} color={s.accent} />
@@ -303,46 +287,21 @@ const BurstNav = ({ onSelectSpace }) => {
               </motion.div>
             ))}
 
-            {/* LIST PHASE — settle into dropdown */}
             {phase === "list" && (
               <motion.div
-              initial={{
-  opacity: 0,
-  scale: 0.95,
-  y: -25
-}}
-animate={{
-  opacity: 1,
-  scale: 1,
-  y: 0
-}}
+                initial={{ opacity: 0, scale: 0.95, y: -25 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: -6 }}
-            transition={{
-  duration: 0.5,
-  ease: [0.16, 1, 0.3, 1]
-}}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="absolute right-0 mt-3 w-[290px] rounded-2xl overflow-hidden z-50"
                 style={{ background: "rgba(12,13,18,0.97)", border: "1px solid rgba(255,255,255,0.09)", boxShadow: "0 30px 80px rgba(0,0,0,0.9)", backdropFilter: "blur(20px)" }}
               >
-               {SPACES.map((s, i) => (
-  <motion.button
-    key={s.id}
-    initial={{
-      opacity: 0,
-      y: -40,
-      scale: 0.85
-    }}
-    animate={{
-      opacity: 1,
-      y: 0,
-      scale: 1
-    }}
-    transition={{
-   delay: (SPACES.length - 1 - i) * 0.2,
-      type: "spring",
-      stiffness: 300,
-      damping: 20
-    }}
+                {SPACES.map((s, i) => (
+                  <motion.button
+                    key={s.id}
+                    initial={{ opacity: 0, y: -40, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: (SPACES.length - 1 - i) * 0.2, type: "spring", stiffness: 300, damping: 20 }}
                     onClick={() => { setPhase("closed"); onSelectSpace(s.id); }}
                     className="w-full text-left px-5 py-4 flex items-center gap-3.5 group hover:bg-white/[0.04] transition-colors"
                     style={{ borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)" }}
@@ -364,7 +323,8 @@ animate={{
       </AnimatePresence>
     </div>
   );
-};  
+};
+
 /* ---------------------------------------------------------------
    NAV
 --------------------------------------------------------------- */
@@ -390,7 +350,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
 };
 
 /* ---------------------------------------------------------------
-   DODGING AUTH MODAL — button runs away twice, third time it stays
+   DODGING AUTH MODAL
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth }) => {
   const [mode, setMode] = useState("signup");
@@ -442,14 +402,12 @@ const AuthModal = ({ onClose, onAuth }) => {
         <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
           <X size={15} color="rgba(255,255,255,0.5)" />
         </button>
-
         <h3 className="font-fraunces text-2xl font-bold mb-1" style={{ color: "white" }}>
           {mode === "signup" ? "Create account" : "Welcome back"}
         </h3>
         <p className="font-body text-[13px] mb-7" style={{ color: "rgba(255,255,255,0.35)" }}>
           {dodgeCount === 0 ? (mode === "signup" ? "Join my world" : "Log back in") : dodgeMsgs[dodgeCount - 1]}
         </p>
-
         <form onSubmit={handleSubmitClick} className="space-y-3">
           {mode === "signup" && (
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -465,8 +423,6 @@ const AuthModal = ({ onClose, onAuth }) => {
             <Lock size={15} color="rgba(255,255,255,0.3)" />
             <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" className="bg-transparent outline-none w-full font-body text-[13.5px]" style={{ color: "white" }} />
           </div>
-
-          {/* THE DODGING BUTTON */}
           <div className="relative h-14 mt-2">
             <motion.button
               type="submit"
@@ -481,7 +437,6 @@ const AuthModal = ({ onClose, onAuth }) => {
             </motion.button>
           </div>
         </form>
-
         <div className="flex items-center gap-3 my-5">
           <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.08)" }} />
           <span className="font-body text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>or</span>
@@ -490,7 +445,6 @@ const AuthModal = ({ onClose, onAuth }) => {
         <button onClick={() => onAuth({ name: "Google User", email: "you@gmail.com" })} className="w-full py-3.5 rounded-2xl font-body text-[13.5px]" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)" }}>
           Continue with Google
         </button>
-
         <p className="text-center font-body text-[12px] mt-6" style={{ color: "rgba(255,255,255,0.3)" }}>
           {mode === "signup" ? "Already have an account? " : "New here? "}
           <button type="button" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setDodgeCount(0); setBtnPos({ x: 0, y: 0 }); }} style={{ color: "#818CF8" }}>
@@ -619,7 +573,6 @@ const Homepage = () => (
           transition={{ duration: 20 + i * 4, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
-
       <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-10 pt-28 pb-20 w-full">
         <div className="flex flex-col md:flex-row items-start gap-10 md:gap-14">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full md:w-auto">
