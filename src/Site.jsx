@@ -83,9 +83,9 @@ useEffect(() => {
   )
     .then(res => res.json())
     .then(data => {
-      if (data.resources) {
+      if (data.resources && data.resources.length > 0) {
         const imgs = data.resources.map(r => ({
-          src: `https://res.cloudinary.com/mm0gviif/image/upload/${r.public_id}`,
+          src: `https://res.cloudinary.com/mm0gviif/image/upload/${r.public_id}.jpg`,
           name: r.public_id,
         }));
         setCloudPhotos(imgs);
@@ -93,7 +93,7 @@ useEffect(() => {
     })
     .catch(() => {});
 }, []);
-
+  
   const slides = photos.length > 0 ? photos : SLIDES;
   const total = slides.length;
 
