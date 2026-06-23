@@ -123,7 +123,7 @@ const AboutMe = () => (
     {/* top label */}
     <div className="flex items-center gap-3 mb-6">
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
-      <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>About Me</p>
+      <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>Behind the Words</p>
       <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
     </div>
 
@@ -149,7 +149,7 @@ const AboutMe = () => (
 
     {/* body */}
     <p className="font-body text-[13.5px] leading-[1.85]" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 480 }}>
-      An author, poet, speaker, and creative visionary passionate about inspiring lives through words, faith, and music. Through books, poetry, sermons, prayer sessions, and motivational messages, I seek to inspire hope, ignite purpose, and point people toward God.
+      I am an author, poet, speaker, and creative visionary passionate about inspiring lives through words, faith, and music. Through books, poetry, sermons, prayer sessions, and motivational messages, I seek to inspire hope, ignite purpose, and point people toward God.
     </p>
 
     {/* stats row */}
