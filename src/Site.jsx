@@ -391,10 +391,11 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
             Oluwasogo Dosunmu
           </button>
+          {/* Fade overlay on the right of the logo - WIDE for fast fade */}
           <div
-            className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none"
+            className="absolute right-0 top-0 bottom-0 w-64 pointer-events-none"
             style={{
-              background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95))",
+              background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95), rgba(7,8,12,1))",
             }}
           />
         </div>
@@ -403,8 +404,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         <div className="absolute left-0 right-0 top-0 bottom-0 z-10 flex items-center overflow-hidden">
           <motion.div
             className="flex gap-8 whitespace-nowrap"
-            animate={{ x: ["30%", "-30%"] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            animate={{ x: ["20%", "-20%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
           >
             {titles.map((item, i) => (
               <span
@@ -430,10 +431,11 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         {/* RIGHT: My World button */}
         <div className="relative z-20 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
+          {/* Fade overlay on the left of the button - WIDE for fast fade */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none"
+            className="absolute left-0 top-0 bottom-0 w-48 pointer-events-none"
             style={{
-              background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95))",
+              background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95), rgba(7,8,12,1))",
             }}
           />
         </div>
