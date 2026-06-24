@@ -287,7 +287,29 @@ const Overview = ({ allContent, engagement }) => {
 const Photos = () => {
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
-
+useEffect(() => {
+  const loadPhotos = async () => {
+    try {
+      const { data, error } = await sb
+        .from("photos")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error loading photos:", error);
+        return;
+      }
+      
+      if (data) {
+        setPhotos(data);
+      }
+    } catch (err) {
+      console.error("Failed to load photos:", err);
+    }
+  };
+  
+  loadPhotos();
+}, []);
 const handleFiles = async (e) => {
   const files = Array.from(e.target.files);
   if (!files.length) return;
@@ -303,10 +325,12 @@ const handleFiles = async (e) => {
           name: files[i].name,
         })
         .select();
+      
       if (error) {
         console.error("Supabase error:", error);
         continue;
       }
+      
       if (data && data.length > 0) {
         setPhotos(prev => [...prev, data[0]]);
       }
