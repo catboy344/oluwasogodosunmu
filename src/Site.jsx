@@ -391,9 +391,9 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px]" style={{ color: "white" }}>
             Oluwasogo Dosunmu
           </button>
-          {/* Fade overlay on the right of the logo */}
+          {/* Fade overlay on the right of the logo - WIDER to fade faster */}
           <div
-            className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none"
+            className="absolute right-0 top-0 bottom-0 w-20 pointer-events-none"
             style={{
               background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95))",
             }}
@@ -431,9 +431,9 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         {/* RIGHT: My World button */}
         <div className="relative z-20 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
-          {/* Fade overlay on the left of the button */}
+          {/* Fade overlay on the left of the button - WIDER to come out from behind */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none"
+            className="absolute left-0 top-0 bottom-0 w-20 pointer-events-none"
             style={{
               background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95))",
             }}
