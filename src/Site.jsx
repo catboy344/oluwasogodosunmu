@@ -365,15 +365,62 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     document.addEventListener("scroll", onScroll);
     return () => document.removeEventListener("scroll", onScroll);
   }, []);
+
+  const titles = [
+    { label: "HER・§HUG£Z¥", color: "Gold" },
+    { label: "Writer", color: "Cream" },
+    { label: "Musicologist", color: "White" },
+  ];
+
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.7 }}
       className="fixed top-0 left-0 right-0 z-40"
-      style={{ background: scrolled ? "rgba(7,8,12,0.9)" : "transparent", backdropFilter: scrolled ? "blur(16px)" : "none", borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "none", transition: "all 0.4s" }}
+      style={{
+        background: scrolled ? "rgba(7,8,12,0.9)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "none",
+        transition: "all 0.4s"
+      }}
     >
+      {/* Nav bar */}
       <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between">
-        <button onClick={onGoHome} className="font-fraunces font-bold text-[18px]" style={{ color: "white" }}>Oluwasogo Dosunmu</button>
+        <button onClick={onGoHome} className="font-fraunces font-bold text-[18px]" style={{ color: "white" }}>
+          Oluwasogo Dosunmu
+        </button>
         <BurstNav onSelectSpace={onSelectSpace} />
+      </div>
+
+      {/* 👇 MOVING TITLES - right below the nav bar */}
+      <div className="w-full overflow-hidden py-1.5" style={{ background: "rgba(255,255,255,0.03)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <motion.div
+          className="flex gap-12 whitespace-nowrap"
+          animate={{ x: ["0%", "-100%"] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        >
+          {/* First set */}
+          {titles.map((item, i) => (
+            <span
+              key={`first-${i}`}
+              className="font-fraunces text-sm md:text-base font-bold tracking-wider"
+              style={{ color: item.color }}
+            >
+              {item.label}
+            </span>
+          ))}
+          {/* Duplicate for seamless loop */}
+          {titles.map((item, i) => (
+            <span
+              key={`second-${i}`}
+              className="font-fraunces text-sm md:text-base font-bold tracking-wider"
+              style={{ color: item.color }}
+            >
+              {item.label}
+            </span>
+          ))}
+        </motion.div>
       </div>
     </motion.header>
   );
