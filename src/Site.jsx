@@ -391,7 +391,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <motion.div
             className="flex gap-8 whitespace-nowrap"
             animate={{ x: ["15%", "-15%"] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
             {titles.map((item, i) => (
               <span
@@ -419,7 +419,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <BurstNav onSelectSpace={onSelectSpace} />
           {/* Fade overlay on the left of the button - WIDER for faster fade */}
           <div
-            className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none"
+            className="absolute left-0 top-0 bottom-0 w-20 pointer-events-none"
             style={{
               background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95))",
             }}
