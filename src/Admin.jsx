@@ -342,9 +342,24 @@ const handleFiles = async (e) => {
   e.target.value = "";
 };
   const deletePhoto = async (id) => {
-    await sb.from("photos").delete({ id });
+  try {
+    // Delete from Supabase
+    const { error } = await sb
+      .from("photos")
+      .delete()
+      .eq("id", id);
+    
+    if (error) {
+      console.error("Delete error:", error);
+      return;
+    }
+    
+    // Then remove from UI
     setPhotos(prev => prev.filter(p => p.id !== id));
-  };
+  } catch (err) {
+    console.error("Delete failed:", err);
+  }
+};
 
   return (
     <div>
