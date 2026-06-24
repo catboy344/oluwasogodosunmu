@@ -379,66 +379,66 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
       transition={{ duration: 0.7 }}
       className="fixed top-0 left-0 right-0 z-40"
       style={{
-        background: scrolled ? "rgba(7,8,12,0.9)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "none",
+        background: scrolled ? "rgba(7,8,12,0.9)" : "rgba(7,8,12,0.5)",
+        backdropFilter: scrolled ? "blur(16px)" : "blur(8px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
         transition: "all 0.4s"
       }}
     >
-      {/* Nav bar */}
-      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between">
-        <button onClick={onGoHome} className="font-fraunces font-bold text-[18px]" style={{ color: "white" }}>
-          Oluwasogo Dosunmu
-        </button>
-        <BurstNav onSelectSpace={onSelectSpace} />
-      </div>
+      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative overflow-hidden">
+        {/* LEFT: Logo - with fade overlay */}
+        <div className="relative z-20 shrink-0">
+          <button onClick={onGoHome} className="font-fraunces font-bold text-[18px]" style={{ color: "white" }}>
+            Oluwasogo Dosunmu
+          </button>
+          {/* Fade overlay on the right of the logo */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-8 pointer-events-none"
+            style={{
+              background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95))",
+            }}
+          />
+        </div>
 
-      {/* 👇 MOVING TITLES with fade effect */}
-      <div className="w-full overflow-hidden py-1.5 relative" style={{ background: "rgba(255,255,255,0.03)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        {/* Fade on the LEFT side (disappears behind the name) */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
-          style={{
-            background: "linear-gradient(to right, #07080C, transparent)",
-            opacity: 0.9,
-          }}
-        />
-        
-        {/* Fade on the RIGHT side (enters from the right) */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
-          style={{
-            background: "linear-gradient(to left, #07080C, transparent)",
-            opacity: 0.9,
-          }}
-        />
+        {/* CENTER: Moving titles */}
+        <div className="absolute left-0 right-0 top-0 bottom-0 z-10 flex items-center overflow-hidden">
+          <motion.div
+            className="flex gap-10 whitespace-nowrap"
+            animate={{ x: ["100%", "-100%"] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          >
+            {titles.map((item, i) => (
+              <span
+                key={`first-${i}`}
+                className="font-fraunces text-sm md:text-base font-bold tracking-wider"
+                style={{ color: item.color }}
+              >
+                {item.label}
+              </span>
+            ))}
+            {titles.map((item, i) => (
+              <span
+                key={`second-${i}`}
+                className="font-fraunces text-sm md:text-base font-bold tracking-wider"
+                style={{ color: item.color }}
+              >
+                {item.label}
+              </span>
+            ))}
+          </motion.div>
+        </div>
 
-        <motion.div
-          className="flex gap-12 whitespace-nowrap"
-          animate={{ x: ["0%", "-100%"] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-        >
-          {/* First set */}
-          {titles.map((item, i) => (
-            <span
-              key={`first-${i}`}
-              className="font-fraunces text-sm md:text-base font-bold tracking-wider"
-              style={{ color: item.color }}
-            >
-              {item.label}
-            </span>
-          ))}
-          {/* Duplicate for seamless loop */}
-          {titles.map((item, i) => (
-            <span
-              key={`second-${i}`}
-              className="font-fraunces text-sm md:text-base font-bold tracking-wider"
-              style={{ color: item.color }}
-            >
-              {item.label}
-            </span>
-          ))}
-        </motion.div>
+        {/* RIGHT: My World button */}
+        <div className="relative z-20 shrink-0">
+          <BurstNav onSelectSpace={onSelectSpace} />
+          {/* Fade overlay on the left of the button */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none"
+            style={{
+              background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95))",
+            }}
+          />
+        </div>
       </div>
     </motion.header>
   );
