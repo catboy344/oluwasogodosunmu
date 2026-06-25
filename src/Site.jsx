@@ -394,8 +394,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
             style={{ background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95))" }} />
         </div>
 
-        {/* CENTER: Scrolling tiles */}
-        <div className="absolute left-0 right-0 top-0 bottom-0 z-10 flex items-center overflow-hidden">
+      {/* CENTER: Scrolling tiles */}
+<div className="absolute top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ left: 220, right: 140 }}>
           <motion.div
             style={{ display: "flex", gap: 8, position: "absolute", left: 0 }}
             animate={{ x: ["0%", "-50%"] }}
