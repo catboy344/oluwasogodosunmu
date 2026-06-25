@@ -85,9 +85,8 @@ const TILE_COLORS = [
   { bg:"rgba(242,148,77,0.12)", border:"rgba(242,148,77,0.3)", color:"#fb923c", dot:"#fb923c" },
 ];
 
-function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
-function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
-
+function lsGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
+function lsSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
 /* ---------------------------------------------------------------
    AUTO-SWIPING GALLERY (FIXED)
 --------------------------------------------------------------- */
@@ -921,19 +920,74 @@ export default function Site() {
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
 
-  useEffect(() => { const s = lsGet("user-profile"); if (s) setUser(JSON.parse(s)); }, []);
+  // 🔥 FIX 1: Check sessionStorage on load and verify session with Supabase
+  useEffect(() => {
+    const checkSession = async () => {
+      // Check if user is in sessionStorage
+      const storedUser = sessionStorage.getItem("user-profile");
+      
+      if (storedUser) {
+        // Verify session is still valid with Supabase
+        const { data: { session } } = await sb.auth.getSession();
+        
+        if (session) {
+          // Session is valid - restore user
+          setUser(JSON.parse(storedUser));
+        } else {
+          // No valid session - clear storage
+          sessionStorage.removeItem("user-profile");
+          setUser(null);
+        }
+      }
+    };
+    
+    checkSession();
+  }, []);
+
+  // 🔥 FIX 2: Auto-logout when tab/browser is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear session when user closes the tab/browser
+      sessionStorage.removeItem("user-profile");
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleSelectSpace = useCallback((id) => {
-    if (user) { setView(id); window.scrollTo(0, 0); }
-    else { setPendingSpace(id); setAuthOpen(true); }
+    if (user) { 
+      setView(id); 
+      window.scrollTo(0, 0); 
+    } else { 
+      setPendingSpace(id); 
+      setAuthOpen(true); 
+    }
   }, [user]);
 
+  // 🔥 FIX 3: Use sessionStorage instead of localStorage
   const handleAuth = (profile) => {
-    setUser(profile); lsSet("user-profile", JSON.stringify(profile)); setAuthOpen(false);
-    if (pendingSpace) { setView(pendingSpace); setPendingSpace(null); window.scrollTo(0, 0); }
+    setUser(profile); 
+    sessionStorage.setItem("user-profile", JSON.stringify(profile)); 
+    setAuthOpen(false);
+    if (pendingSpace) { 
+      setView(pendingSpace); 
+      setPendingSpace(null); 
+      window.scrollTo(0, 0); 
+    }
   };
 
-  const logout = () => { setUser(null); setView("home"); lsSet("user-profile", ""); };
+  // 🔥 FIX 4: Proper logout - clears session and Supabase session
+  const logout = async () => { 
+    await sb.auth.signOut(); // Sign out from Supabase
+    setUser(null); 
+    setView("home"); 
+    sessionStorage.removeItem("user-profile"); 
+  };
+  
   const activeSpace = SPACES.find(s => s.id === view);
 
   return (
