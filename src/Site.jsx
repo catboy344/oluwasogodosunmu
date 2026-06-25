@@ -334,7 +334,7 @@ const BurstNav = ({ onSelectSpace }) => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: -6 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute right-0 mt-3 w-[290px] rounded-2xl overflow-hidden"
+                className="absolute right-4 mt-3 w-[290px] rounded-2xl overflow-hidden"
                 style={{ 
                   background: "rgba(12,13,18,0.97)", 
                   border: "1px solid rgba(255,255,255,0.09)", 
