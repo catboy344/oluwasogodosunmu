@@ -412,7 +412,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         </div>
 
         {/* RIGHT: My World */}
-        <div className="relative z-20 shrink-0">
+        <div className="relative z-30 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
         </div> {/* <-- ALSO ADD THIS CLOSING DIV FOR THE RIGHT SECTION */}
 
