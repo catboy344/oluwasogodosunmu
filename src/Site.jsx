@@ -970,7 +970,7 @@ const Homepage = () => {
 };
 
 /* ---------------------------------------------------------------
-   ROOT - SITE
+   ROOT - SITE (WITH STRONG AUTO-LOGOUT)
 --------------------------------------------------------------- */
 export default function Site() {
   const [view, setView] = useState("home");
@@ -978,7 +978,7 @@ export default function Site() {
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
 
-  // Check session on load
+  // 🔥 FIX 1: Check session on load and every few seconds
   useEffect(() => {
     const checkSession = async () => {
       const storedUser = sessionStorage.getItem("user-profile");
@@ -1012,35 +1012,76 @@ export default function Site() {
     checkSession();
   }, []);
 
-  // Auto-logout when tab/browser is closed
+  // 🔥 FIX 2: Auto-logout when tab/browser is closed (MULTIPLE EVENTS)
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.removeItem("user-profile");
+    };
+    
     const handlePageHide = () => {
       sessionStorage.removeItem("user-profile");
     };
     
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User switched tabs or minimized browser
+        // We'll check session when they come back
+      }
+    };
+    
+    // Use BOTH events for maximum coverage
+    window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
-  // 🔥 NEW: Check session every 5 seconds (STRONGER AUTO-LOGOUT)
+  // 🔥 FIX 3: Check session every 3 seconds (VERY STRONG)
   useEffect(() => {
     const interval = setInterval(async () => {
       const { data: { session } } = await sb.auth.getSession();
       
-      if (!session) {
+      if (!session && user) {
         // Session expired - logout immediately
         sessionStorage.removeItem("user-profile");
         setUser(null);
         setView("home");
-        console.log("Auto-logged out: Session expired");
+        console.log("🔄 Auto-logged out: Session expired");
       }
-    }, 5000); // Check every 5 seconds
+    }, 3000); // Check every 3 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
+
+  // 🔥 FIX 4: Check session when user comes back to the tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User came back to the tab - check session
+        const checkSessionOnReturn = async () => {
+          const { data: { session } } = await sb.auth.getSession();
+          if (!session && user) {
+            sessionStorage.removeItem("user-profile");
+            setUser(null);
+            setView("home");
+            console.log("🔄 Auto-logged out: Tab switched");
+          }
+        };
+        checkSessionOnReturn();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
   const handleSelectSpace = useCallback((id) => {
     if (user) { 
