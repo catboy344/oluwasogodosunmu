@@ -391,15 +391,15 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     >
       <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
 
-        
-        <div className="relative z-20 shrink-0">
+        {/* LEFT: Logo - pushed left */}
+        <div className="relative z-20 shrink-0 mr-12">
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
             Oluwasogo Dosunmu
           </button>
         </div>
 
         {/* CENTER: Scrolling tiles */}
-        <div className="absolute left-1/2 top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ transform: 'translateX(-50%)', maxWidth: '60%' }}>
+        <div className="absolute left-1/2 top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ transform: 'translateX(-50%)', maxWidth: '55%' }}>
           <motion.div
             style={{ display: "flex", gap: 8 }}
             animate={{ x: ["0%", "-50%"] }}
@@ -417,8 +417,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           </motion.div>
         </div>
 
-        {/* RIGHT: My World */}
-        <div className="relative z-50 shrink-0">
+        {/* RIGHT: My World - pushed right */}
+        <div className="relative z-50 shrink-0 ml-12">
           <BurstNav onSelectSpace={onSelectSpace} />
         </div>
 
