@@ -977,6 +977,7 @@ export default function Site() {
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
 
+  // Check session on load
   useEffect(() => {
     const checkSession = async () => {
       const storedUser = sessionStorage.getItem("user-profile");
@@ -1010,6 +1011,7 @@ export default function Site() {
     checkSession();
   }, []);
 
+  // Auto-logout when tab/browser is closed
   useEffect(() => {
     const handlePageHide = () => {
       sessionStorage.removeItem("user-profile");
@@ -1020,6 +1022,23 @@ export default function Site() {
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
     };
+  }, []);
+
+  // 🔥 NEW: Check session every 5 seconds (STRONGER AUTO-LOGOUT)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      
+      if (!session) {
+        // Session expired - logout immediately
+        sessionStorage.removeItem("user-profile");
+        setUser(null);
+        setView("home");
+        console.log("Auto-logged out: Session expired");
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleSelectSpace = useCallback((id) => {
