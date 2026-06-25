@@ -6,11 +6,12 @@ import {
   Play, Mail, Lock, User, LogOut, ArrowLeft, ChevronLeft, ChevronRight,
   Quote
 } from "lucide-react";
+import { createClient } from '@supabase/supabase-js';
+import { useTheme } from './ThemeContext';
+import { getThemeColors } from './themeColors';
+import ThemeToggle from './ThemeToggle';
 
 // ==================== SUPABASE ====================
-import { createClient } from '@supabase/supabase-js';
-
-// 🔁 REPLACE THESE WITH YOUR ACTUAL VALUES
 const SUPABASE_URL = "https://mzhccgxxbznvinqyvust.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aGNjZ3h4YnpudmlucXl2dXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzkwMTAsImV4cCI6MjA5NzgxNTAxMH0.z-KNumdmNKaXyYYgWGFo1ZIxNMPc31rNvGqvdIlMbFU";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -87,8 +88,9 @@ const TILE_COLORS = [
 
 function lsGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
 function lsSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
+
 /* ---------------------------------------------------------------
-   AUTO-SWIPING GALLERY (FIXED)
+   AUTO-SWIPING GALLERY
 --------------------------------------------------------------- */
 const Gallery = () => {
   const [photos, setPhotos] = useState([]);
@@ -96,7 +98,6 @@ const Gallery = () => {
   const [dir, setDir] = useState(1);
   const [glowIdx, setGlowIdx] = useState(0);
 
-  // Load photos from Supabase
   useEffect(() => {
     const loadPhotos = async () => {
       try {
@@ -222,50 +223,58 @@ const Gallery = () => {
     </div>
   );
 };
-/* ---------------------------------------------------------------
-   ABOUT ME (unchanged)
---------------------------------------------------------------- */
-const AboutMe = () => (
-  <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="flex-1 flex flex-col justify-center py-4 min-w-0">
-    <div className="flex items-center gap-3 mb-6">
-      <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(255,255,255,0.15), transparent)" }} />
-      <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>Behind the Words</p>
-      <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15))" }} />
-    </div>
-    <h1 className="font-fraunces font-black leading-[1.0] mb-5" style={{ fontSize: "clamp(2.2rem,5vw,3.4rem)", color: "white" }}>
-      Oluwasogo<br />Dosunmu
-    </h1>
-    <div className="flex flex-wrap gap-2 mb-7">
-      {[["Author", "#7C3AED"], ["Poet", "#2563EB"], ["Speaker", "#059669"], ["Visionary", "#DC2626"]].map(([r, c]) => (
-        <span key={r} className="px-3 py-1.5 rounded-full font-body text-[11px] font-medium" style={{ background: `${c}22`, color: c, border: `1px solid ${c}44` }}>{r}</span>
-      ))}
-    </div>
-    <div className="relative mb-7 pl-5" style={{ borderLeft: "3px solid rgba(255,255,255,0.15)" }}>
-      <Quote size={18} color="rgba(255,255,255,0.2)" className="mb-2" />
-      <p className="font-fraunces italic text-[18px] md:text-[21px] leading-[1.6]" style={{ color: "rgba(255,255,255,0.85)" }}>
-        Every creation has the power to leave a lasting impact.
-      </p>
-    </div>
-    <p className="font-body text-[13.5px] leading-[1.85]" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 480 }}>
-      I am an author, poet, speaker, and creative visionary passionate about inspiring lives through words, faith, and music. Through books, poetry, sermons, prayer sessions, and motivational messages, I seek to inspire hope, ignite purpose, and point people toward God.
-    </p>
-    <div className="flex items-center gap-6 mt-8 pt-7" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-      {STATS.map((s, i) => (
-        <div key={i}>
-          <p className="font-fraunces font-black text-2xl md:text-3xl" style={{ color: "white" }}>{s.n}</p>
-          <p className="font-body text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{s.label}</p>
-        </div>
-      ))}
-    </div>
-  </motion.div>
-);
 
 /* ---------------------------------------------------------------
-   BURST NAV (unchanged)
+   ABOUT ME - THEMED
+--------------------------------------------------------------- */
+const AboutMe = () => {
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
+  
+  return (
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }} className="flex-1 flex flex-col justify-center py-4 min-w-0">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, ${colors.borderColor}, transparent)` }} />
+        <p className="font-body text-[10px] tracking-[0.4em] uppercase shrink-0" style={{ color: colors.textMuted }}>Behind the Words</p>
+        <div className="h-px flex-1" style={{ background: `linear-gradient(90deg, transparent, ${colors.borderColor})` }} />
+      </div>
+      <h1 className="font-fraunces font-black leading-[1.0] mb-5" style={{ fontSize: "clamp(2.2rem,5vw,3.4rem)", color: colors.textPrimary }}>
+        Oluwasogo<br />Dosunmu
+      </h1>
+      <div className="flex flex-wrap gap-2 mb-7">
+        {[["Author", "#7C3AED"], ["Poet", "#2563EB"], ["Speaker", "#059669"], ["Visionary", "#DC2626"]].map(([r, c]) => (
+          <span key={r} className="px-3 py-1.5 rounded-full font-body text-[11px] font-medium" style={{ background: `${c}22`, color: c, border: `1px solid ${c}44` }}>{r}</span>
+        ))}
+      </div>
+      <div className="relative mb-7 pl-5" style={{ borderLeft: `3px solid ${colors.borderColor}` }}>
+        <Quote size={18} color={colors.textMuted} className="mb-2" />
+        <p className="font-fraunces italic text-[18px] md:text-[21px] leading-[1.6]" style={{ color: colors.textLight }}>
+          Every creation has the power to leave a lasting impact.
+        </p>
+      </div>
+      <p className="font-body text-[13.5px] leading-[1.85]" style={{ color: colors.textSecondary, maxWidth: 480 }}>
+        I am an author, poet, speaker, and creative visionary passionate about inspiring lives through words, faith, and music. Through books, poetry, sermons, prayer sessions, and motivational messages, I seek to inspire hope, ignite purpose, and point people toward God.
+      </p>
+      <div className="flex items-center gap-6 mt-8 pt-7" style={{ borderTop: `1px solid ${colors.borderColor}` }}>
+        {STATS.map((s, i) => (
+          <div key={i}>
+            <p className="font-fraunces font-black text-2xl md:text-3xl" style={{ color: colors.textPrimary }}>{s.n}</p>
+            <p className="font-body text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+/* ---------------------------------------------------------------
+   BURST NAV
 --------------------------------------------------------------- */
 const BurstNav = ({ onSelectSpace }) => {
   const [phase, setPhase] = useState("closed");
   const ref = useRef(null);
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
 
   useEffect(() => {
     const onClick = (e) => {
@@ -301,7 +310,11 @@ const BurstNav = ({ onSelectSpace }) => {
       <button
         onClick={handleToggle}
         className="flex items-center gap-2 font-body text-[13px] tracking-[0.12em] uppercase px-5 py-2.5 rounded-full"
-        style={{ color: "white", background: phase !== "closed" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}
+        style={{ 
+          color: colors.textPrimary,
+          background: phase !== "closed" ? colors.backgroundInput : colors.backgroundNavTransparent,
+          border: `1px solid ${colors.borderLight}`
+        }}
       >
         My World
         <motion.span animate={{ rotate: phase !== "closed" ? 180 : 0 }} transition={{ duration: 2.5 }}>
@@ -323,25 +336,25 @@ const BurstNav = ({ onSelectSpace }) => {
                 style={{ background: `${s.accent}22`, border: `1px solid ${s.accent}55`, whiteSpace: "nowrap" }}
               >
                 <s.Icon size={13} color={s.accent} />
-                <span className="font-body text-[12px]" style={{ color: "white" }}>{s.title}</span>
+                <span className="font-body text-[12px]" style={{ color: colors.textPrimary }}>{s.title}</span>
               </motion.div>
             ))}
 
-          {phase === "list" && (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95, y: -25 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    exit={{ opacity: 0, scale: 0.92, y: -6 }}
-    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-    className="absolute right-0 mt-3 w-[350px] rounded-2xl overflow-hidden"
-    style={{ 
-      background: "rgba(12,13,18,0.97)", 
-      border: "1px solid rgba(255,255,255,0.09)", 
-      boxShadow: "0 30px 80px rgba(0,0,0,0.9)", 
-      backdropFilter: "blur(20px)",
-      zIndex: 99999
-    }}
-  >
+            {phase === "list" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -25 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute right-0 mt-3 w-[350px] rounded-2xl overflow-hidden"
+                style={{ 
+                  background: colors.backgroundModal,
+                  border: `1px solid ${colors.borderColor}`,
+                  boxShadow: colors.shadow,
+                  backdropFilter: "blur(20px)",
+                  zIndex: 99999
+                }}
+              >
                 {SPACES.map((s, i) => (
                   <motion.button
                     key={s.id}
@@ -350,14 +363,14 @@ const BurstNav = ({ onSelectSpace }) => {
                     transition={{ delay: (SPACES.length - 1 - i) * 0.2, type: "spring", stiffness: 300, damping: 20 }}
                     onClick={() => { setPhase("closed"); onSelectSpace(s.id); }}
                     className="w-full text-left px-5 py-4 flex items-center gap-3.5 group hover:bg-white/[0.04] transition-colors"
-                    style={{ borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ borderTop: i === 0 ? "none" : `1px solid ${colors.borderColor}` }}
                   >
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-lg">
                       {s.emoji}
                     </div>
                     <span>
-                      <span className="block font-body text-[13.5px] font-medium" style={{ color: "rgba(255,255,255,0.9)" }}>{s.title}</span>
-                      <span className="block font-body text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{s.tag}</span>
+                      <span className="block font-body text-[13.5px] font-medium" style={{ color: colors.textPrimary }}>{s.title}</span>
+                      <span className="block font-body text-[11px] mt-0.5" style={{ color: colors.textMuted }}>{s.tag}</span>
                     </span>
                     <div className="ml-auto w-2 h-2 rounded-full shrink-0" style={{ background: s.accent }} />
                   </motion.button>
@@ -370,11 +383,15 @@ const BurstNav = ({ onSelectSpace }) => {
     </div>
   );
 };
+
 /* ---------------------------------------------------------------
-   NAV (unchanged)
+   NAV - THEMED
 --------------------------------------------------------------- */
 const Nav = ({ onSelectSpace, onGoHome }) => {
   const [scrolled, setScrolled] = useState(false);
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
+  
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     document.addEventListener("scroll", onScroll);
@@ -385,18 +402,27 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     <motion.header
       initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7 }}
       className="fixed top-0 left-0 right-0 z-40"
-      style={{ background: scrolled ? "rgba(7,8,12,0.9)" : "rgba(7,8,12,0.5)", backdropFilter: scrolled ? "blur(16px)" : "blur(8px)", borderBottom: "1px solid rgba(255,255,255,0.07)", transition: "all 0.4s" }}
+      style={{
+        background: scrolled ? colors.backgroundNav : colors.backgroundNavTransparent,
+        backdropFilter: scrolled ? "blur(16px)" : "blur(8px)",
+        borderBottom: `1px solid ${colors.borderColor}`,
+        transition: "all 0.4s"
+      }}
     >
       <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
 
         {/* LEFT: Logo */}
         <div className="relative z-20 shrink-0 mr-12">
-          <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
+          <button 
+            onClick={onGoHome} 
+            className="font-fraunces font-bold text-[18px] md:text-[20px]" 
+            style={{ color: colors.textPrimary }}
+          >
             Oluwasogo Dosunmu
           </button>
         </div>
 
-        {/* CENTER: Scrolling tiles - shifted more to the right */}
+        {/* CENTER: Scrolling tiles */}
         <div className="absolute left-1/2 top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ transform: 'translateX(-40%)', maxWidth: '50%' }}>
           <motion.div
             style={{ display: "flex", gap: 8 }}
@@ -415,8 +441,9 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           </motion.div>
         </div>
 
-        {/* RIGHT: My World */}
-        <div className="relative z-50 shrink-0 ml-12">
+        {/* RIGHT: My World + Theme Toggle */}
+        <div className="relative z-50 shrink-0 flex items-center gap-3 ml-12">
+          <ThemeToggle />
           <BurstNav onSelectSpace={onSelectSpace} />
         </div>
 
@@ -424,10 +451,13 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     </motion.header>
   );
 };
+
 /* ---------------------------------------------------------------
-   AUTH MODAL (unchanged)
+   AUTH MODAL - THEMED
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
   const [mode, setMode] = useState(defaultMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -461,7 +491,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
       return;
     }
 
-    // DODGE: First 2 clicks make it dodge
     if (dodgeCount < 2) {
       setDodgeCount(c => c + 1);
       dodge();
@@ -475,9 +504,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
         const { data, error } = await sb.auth.signUp({
           email: email,
           password: password,
-          options: {
-            data: { full_name: name },
-          },
+          options: { data: { full_name: name } },
         });
         
         if (error) {
@@ -497,22 +524,24 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
         }
         
         if (data.user) {
-          setSuccess(true);
-          setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
-          setLoading(false);
-          setEmail("");
-          setPassword("");
-          setName("");
-          
-          setTimeout(() => {
-            onClose();
-            setError("");
-            setSuccess(false);
-          }, 5000);
+          if (data.user.confirmed_at === null) {
+            setSuccess(true);
+            setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
+            setLoading(false);
+            setEmail("");
+            setPassword("");
+            setName("");
+            setTimeout(() => {
+              onClose();
+              setError("");
+              setSuccess(false);
+            }, 5000);
+          } else {
+            onAuth({ name: name, email: email, id: data.user.id });
+          }
           return;
         }
       } else {
-        // LOGIN
         const { data, error } = await sb.auth.signInWithPassword({
           email: email,
           password: password,
@@ -549,18 +578,13 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     }
   };
 
-  // 🔥 UPDATED: Google Login Handler with redirect
   const handleGoogleLogin = async () => {
     try {
       const { data, error } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin, // Redirect back to your site
-        },
+        options: { redirectTo: window.location.origin },
       });
       if (error) throw error;
-      // User will be redirected to Google, then back to your site
-      // The checkSession function in Site component will handle the rest
     } catch (err) {
       setError(err.message);
     }
@@ -569,14 +593,14 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const dodgeMsgs = ["Hmm, not yet... 😏", "Almost! Try again 😅", "Okay okay, you got me 🎉"];
 
   return (
-    <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-5" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-5" style={{ background: isDark ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-sm rounded-3xl p-8 relative"
-        style={{ background: "#0E1015", border: "1px solid rgba(255,255,255,0.09)" }}
+        style={{ background: colors.backgroundModal, border: `1px solid ${colors.borderColor}` }}
       >
         <button 
           onClick={() => { 
@@ -588,15 +612,15 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             setBtnPos({ x: 0, y: 0 });
           }} 
           className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center" 
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
         >
-          <X size={15} color="rgba(255,255,255,0.5)" />
+          <X size={15} color={colors.textSecondary} />
         </button>
         
-        <h3 className="font-fraunces text-2xl font-bold mb-1" style={{ color: "white" }}>
+        <h3 className="font-fraunces text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
           {mode === "signup" ? "Create account" : "Welcome back"}
         </h3>
-        <p className="font-body text-[13px] mb-7" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="font-body text-[13px] mb-7" style={{ color: colors.textSecondary }}>
           {dodgeCount === 0 ? (mode === "signup" ? "Join my world" : "Log back in") : dodgeMsgs[dodgeCount - 1]}
         </p>
         
@@ -639,8 +663,8 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             <p className="font-body text-[14px]" style={{ color: "#10B981" }}>
               ✅ Check your email!
             </p>
-            <p className="font-body text-[12px] mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
-              We sent a confirmation link to <strong style={{ color: "white" }}>{email}</strong>
+            <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>
+              We sent a confirmation link to <strong style={{ color: colors.textPrimary }}>{email}</strong>
             </p>
           </div>
         )}
@@ -648,41 +672,41 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
         {!success && (
           <form onSubmit={handleSubmit} className="space-y-3">
             {mode === "signup" && (
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <User size={15} color="rgba(255,255,255,0.3)" />
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+                <User size={15} color={colors.textMuted} />
                 <input 
                   value={name} 
                   onChange={e => setName(e.target.value)} 
                   placeholder="Your name" 
                   className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                  style={{ color: "white" }} 
+                  style={{ color: colors.textPrimary }} 
                   required
                 />
               </div>
             )}
             
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Mail size={15} color="rgba(255,255,255,0.3)" />
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+              <Mail size={15} color={colors.textMuted} />
               <input 
                 value={email} 
                 onChange={e => setEmail(e.target.value)} 
                 placeholder="Email address" 
                 type="email" 
                 className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                style={{ color: "white" }} 
+                style={{ color: colors.textPrimary }} 
                 required
               />
             </div>
             
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Lock size={15} color="rgba(255,255,255,0.3)" />
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+              <Lock size={15} color={colors.textMuted} />
               <input 
                 value={password} 
                 onChange={e => setPassword(e.target.value)} 
                 placeholder="Password (min 6 characters)" 
                 type="password" 
                 className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                style={{ color: "white" }} 
+                style={{ color: colors.textPrimary }} 
                 required
                 minLength={6}
               />
@@ -723,16 +747,15 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
         {!success && (
           <>
             <div className="flex items-center gap-3 my-5">
-              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.08)" }} />
-              <span className="font-body text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>or</span>
-              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.08)" }} />
+              <div className="h-px flex-1" style={{ background: colors.borderColor }} />
+              <span className="font-body text-[11px]" style={{ color: colors.textMuted }}>or</span>
+              <div className="h-px flex-1" style={{ background: colors.borderColor }} />
             </div>
             
-            {/* 🔥 UPDATED: Google Login Button with handleGoogleLogin */}
             <button 
               onClick={handleGoogleLogin}
               className="w-full py-3.5 rounded-2xl font-body text-[13.5px] flex items-center justify-center gap-2"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)" }}
+              style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -743,7 +766,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
               Continue with Google
             </button>
             
-            <p className="text-center font-body text-[12px] mt-6" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <p className="text-center font-body text-[12px] mt-6" style={{ color: colors.textMuted }}>
               {mode === "signup" ? "Already have an account? " : "New here? "}
               <button 
                 type="button" 
@@ -764,43 +787,50 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     </motion.div>
   );
 };
+
 /* ---------------------------------------------------------------
-   ENGAGEMENT (unchanged)
+   ENGAGEMENT
 --------------------------------------------------------------- */
 const Engagement = ({ contentId, user, accent }) => {
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
   const [data, setData] = useState({ likes: 0, comments: [] });
   const [likedByMe, setLikedByMe] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [draft, setDraft] = useState("");
+  
   useEffect(() => {
     const s = lsGet(`engage_${contentId}`); const m = lsGet(`liked_${contentId}`);
     if (s) setData(JSON.parse(s)); if (m) setLikedByMe(JSON.parse(m));
   }, [contentId]);
+  
   const toggleLike = () => {
     const n = !likedByMe; const nd = { ...data, likes: data.likes + (n ? 1 : -1) };
     setLikedByMe(n); setData(nd); lsSet(`liked_${contentId}`, JSON.stringify(n)); lsSet(`engage_${contentId}`, JSON.stringify(nd));
   };
+  
   const addComment = (e) => {
     e.preventDefault(); if (!draft.trim()) return;
     const nd = { ...data, comments: [...data.comments, { name: user?.name || "Guest", text: draft.trim() }] };
     setData(nd); setDraft(""); lsSet(`engage_${contentId}`, JSON.stringify(nd));
   };
+  
   return (
-    <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+    <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${colors.borderColor}` }}>
       <div className="flex items-center gap-5">
         <button onClick={toggleLike} className="flex items-center gap-2 font-body text-[13px]">
-          <Heart size={15} fill={likedByMe ? accent : "none"} color={likedByMe ? accent : "rgba(255,255,255,0.3)"} />
-          <span style={{ color: likedByMe ? accent : "rgba(255,255,255,0.3)" }}>{data.likes}</span>
+          <Heart size={15} fill={likedByMe ? accent : "none"} color={likedByMe ? accent : colors.textMuted} />
+          <span style={{ color: likedByMe ? accent : colors.textMuted }}>{data.likes}</span>
         </button>
-        <button onClick={() => setShowComments(s => !s)} className="flex items-center gap-2 font-body text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <button onClick={() => setShowComments(s => !s)} className="flex items-center gap-2 font-body text-[13px]" style={{ color: colors.textMuted }}>
           <MessageCircle size={15} />{data.comments.length}
         </button>
       </div>
       {showComments && (
         <div className="mt-3 space-y-2">
-          {data.comments.map((c, i) => <div key={i} className="font-body text-[12.5px]"><span style={{ color: accent }}>{c.name}</span> <span style={{ color: "rgba(255,255,255,0.6)" }}>{c.text}</span></div>)}
+          {data.comments.map((c, i) => <div key={i} className="font-body text-[12.5px]"><span style={{ color: accent }}>{c.name}</span> <span style={{ color: colors.textSecondary }}>{c.text}</span></div>)}
           <form onSubmit={addComment} className="flex gap-2 mt-2">
-            <input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Say something..." className="flex-1 bg-transparent outline-none font-body text-[13px] px-4 py-2.5 rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "white" }} />
+            <input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Say something..." className="flex-1 bg-transparent outline-none font-body text-[13px] px-4 py-2.5 rounded-xl" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textPrimary }} />
             <button type="submit" style={{ color: accent }}><Send size={15} /></button>
           </form>
         </div>
@@ -810,38 +840,46 @@ const Engagement = ({ contentId, user, accent }) => {
 };
 
 /* ---------------------------------------------------------------
-   SPACE VIEW (unchanged)
+   SPACE VIEW - THEMED
 --------------------------------------------------------------- */
 const SpaceView = ({ space, user, onBack }) => {
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
   const content = sampleContent(space);
+  
   return (
-    <div className="min-h-screen" style={{ background: "#07080C" }}>
+    <div className="min-h-screen" style={{ background: colors.background, transition: "all 0.3s ease" }}>
       <button
         onClick={onBack}
         className="fixed top-5 left-5 z-50 flex items-center gap-2 font-body text-[13px] px-4 py-2.5 rounded-full"
-        style={{ color: "white", background: "rgba(20,20,28,0.92)", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}
+        style={{ 
+          color: colors.textPrimary, 
+          background: isDark ? "rgba(20,20,28,0.92)" : "rgba(255,255,255,0.92)", 
+          border: `1px solid ${colors.borderLight}`,
+          backdropFilter: "blur(10px)" 
+        }}
       >
         <ArrowLeft size={14} /> Back
       </button>
-      <div className="relative pt-24 pb-16 px-6 md:px-10 text-center" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="relative pt-24 pb-16 px-6 md:px-10 text-center" style={{ borderBottom: `1px solid ${colors.borderColor}` }}>
         <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 0%, ${space.accent}25, transparent)` }} />
         <div className="relative">
           <div className="text-4xl mb-3">{space.emoji}</div>
           <p className="font-body text-[10.5px] tracking-[0.3em] uppercase mb-2" style={{ color: space.accent }}>{space.tag}</p>
-          <h1 className="font-fraunces font-bold text-4xl md:text-[3.2rem] leading-tight mb-4" style={{ color: "white" }}>{space.title}</h1>
-          <p className="font-body text-[15px] max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>{space.desc}</p>
-          <p className="font-body text-[13px] mt-5" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <h1 className="font-fraunces font-bold text-4xl md:text-[3.2rem] leading-tight mb-4" style={{ color: colors.textPrimary }}>{space.title}</h1>
+          <p className="font-body text-[15px] max-w-md mx-auto" style={{ color: colors.textSecondary }}>{space.desc}</p>
+          <p className="font-body text-[13px] mt-5" style={{ color: colors.textMuted }}>
             Welcome, <span style={{ color: space.accent }}>{user?.name}</span> — {space.welcome}.
           </p>
         </div>
       </div>
       <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 space-y-4">
         {content.map((item, i) => (
-          <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-fraunces text-xl font-semibold" style={{ color: "white" }}>{item.title}</h3>
-                <p className="font-body text-[12px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>{item.meta}</p>
+                <h3 className="font-fraunces text-xl font-semibold" style={{ color: colors.textPrimary }}>{item.title}</h3>
+                <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>{item.meta}</p>
               </div>
               <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
                 <Play size={14} color={space.accent} fill={space.accent} />
@@ -849,10 +887,10 @@ const SpaceView = ({ space, user, onBack }) => {
             </div>
             {space.type === "book" && (
               <div className="mt-4">
-                <p className="font-body text-[13.5px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{item.blurb}</p>
+                <p className="font-body text-[13.5px] leading-relaxed" style={{ color: colors.textSecondary }}>{item.blurb}</p>
                 <div className="flex flex-wrap gap-3 mt-4">
                   <button className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold" style={{ background: space.accent, color: "#07080C" }}>Read PDF · {item.price}</button>
-                  <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>Buy hardcover</button>
+                  <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}>Buy hardcover</button>
                 </div>
               </div>
             )}
@@ -865,66 +903,73 @@ const SpaceView = ({ space, user, onBack }) => {
 };
 
 /* ---------------------------------------------------------------
-   HOMEPAGE (unchanged)
+   HOMEPAGE - THEMED
 --------------------------------------------------------------- */
-const Homepage = () => (
-  <div style={{ background: "#07080C", minHeight: "100vh" }}>
-    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden">
-      {[
-        { color: "#7C3AED", top: "10%", left: "60%", size: 500 },
-        { color: "#2563EB", top: "60%", left: "-5%", size: 400 },
-        { color: "#059669", top: "80%", left: "70%", size: 360 },
-      ].map((b, i) => (
-        <motion.div key={i} className="absolute rounded-full pointer-events-none"
-          style={{ top: b.top, left: b.left, width: b.size, height: b.size, background: b.color, opacity: 0.18, filter: "blur(130px)", mixBlendMode: "screen" }}
-          animate={{ x: [0, 30, -15, 0], y: [0, -25, 18, 0] }}
-          transition={{ duration: 20 + i * 4, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-10 pt-28 pb-20 w-full">
-        <div className="flex flex-col md:flex-row items-start gap-10 md:gap-14">
-          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full md:w-auto">
-            <Gallery />
-          </motion.div>
-          <AboutMe />
+const Homepage = () => {
+  const { isDark } = useTheme();
+  const colors = getThemeColors(isDark);
+  
+  return (
+    <div style={{ background: colors.background, minHeight: "100vh", transition: "all 0.3s ease" }}>
+      <div className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+        {[
+          { color: "#7C3AED", top: "10%", left: "60%", size: 500 },
+          { color: "#2563EB", top: "60%", left: "-5%", size: 400 },
+          { color: "#059669", top: "80%", left: "70%", size: 360 },
+        ].map((b, i) => (
+          <motion.div key={i} className="absolute rounded-full pointer-events-none"
+            style={{ top: b.top, left: b.left, width: b.size, height: b.size, background: b.color, opacity: 0.18, filter: "blur(130px)", mixBlendMode: "screen" }}
+            animate={{ x: [0, 30, -15, 0], y: [0, -25, 18, 0] }}
+            transition={{ duration: 20 + i * 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+        <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-10 pt-28 pb-20 w-full">
+          <div className="flex flex-col md:flex-row items-start gap-10 md:gap-14">
+            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full md:w-auto">
+              <Gallery />
+            </motion.div>
+            <AboutMe />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
+      <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
 
-    <div className="max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-20">
-      <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="font-body text-[10.5px] tracking-[0.35em] uppercase mb-8 text-center" style={{ color: "rgba(255,255,255,0.3)" }}>
-        Featured
-      </motion.p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-        {AD_SLOTS.map((label, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} whileHover={{ y: -5 }}
-            className="aspect-[3/4] rounded-2xl flex flex-col items-center justify-center gap-2 p-3 text-center overflow-hidden relative"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            <div className="absolute w-16 h-16 rounded-full pointer-events-none" style={{ background: ["#7C3AED", "#2563EB", "#059669", "#DC2626", "#D97706", "#DB2777"][i % 6], opacity: 0.3, filter: "blur(22px)", top: "-10%", left: "20%" }} />
-            <Sparkles size={15} color="rgba(255,255,255,0.3)" className="relative" />
-            <p className="relative font-body text-[11px] leading-tight" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</p>
-            <p className="relative font-body text-[8.5px] uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.2)" }}>Coming soon</p>
-          </motion.div>
-        ))}
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-20">
+        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="font-body text-[10.5px] tracking-[0.35em] uppercase mb-8 text-center" style={{ color: colors.textMuted }}>
+          Featured
+        </motion.p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {AD_SLOTS.map((label, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} whileHover={{ y: -5 }}
+              className="aspect-[3/4] rounded-2xl flex flex-col items-center justify-center gap-2 p-3 text-center overflow-hidden relative"
+              style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}
+            >
+              <div className="absolute w-16 h-16 rounded-full pointer-events-none" style={{ background: ["#7C3AED", "#2563EB", "#059669", "#DC2626", "#D97706", "#DB2777"][i % 6], opacity: 0.3, filter: "blur(22px)", top: "-10%", left: "20%" }} />
+              <Sparkles size={15} color={colors.textMuted} className="relative" />
+              <p className="relative font-body text-[11px] leading-tight" style={{ color: colors.textSecondary }}>{label}</p>
+              <p className="relative font-body text-[8.5px] uppercase tracking-[0.15em]" style={{ color: colors.textMuted }}>Coming soon</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
 
-    <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
-    <footer className="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
-      <p className="font-body text-[12px]" style={{ color: "rgba(255,255,255,0.25)" }}>© {new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.</p>
-      <div className="flex items-center gap-3">
-        {[Instagram, Youtube, Facebook, Twitter].map((Icon, i) => (
-          <a key={i} href="#" className="w-9 h-9 rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}><Icon size={15} /></a>
-        ))}
-      </div>
-    </footer>
-  </div>
-);
+      <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
+      
+      <footer className="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
+        <p className="font-body text-[12px]" style={{ color: colors.textMuted }}>© {new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.</p>
+        <div className="flex items-center gap-3">
+          {[Instagram, Youtube, Facebook, Twitter].map((Icon, i) => (
+            <a key={i} href="#" className="w-9 h-9 rounded-full flex items-center justify-center" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}><Icon size={15} /></a>
+          ))}
+        </div>
+      </footer>
+    </div>
+  );
+};
+
 /* ---------------------------------------------------------------
-   ROOT
+   ROOT - SITE
 --------------------------------------------------------------- */
 export default function Site() {
   const [view, setView] = useState("home");
@@ -932,7 +977,6 @@ export default function Site() {
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
 
-  // Check session on load - handles both email and Google login
   useEffect(() => {
     const checkSession = async () => {
       const storedUser = sessionStorage.getItem("user-profile");
@@ -966,43 +1010,16 @@ export default function Site() {
     checkSession();
   }, []);
 
-  // 🔥 FIXED: Auto-logout when tab/browser is closed
   useEffect(() => {
     const handlePageHide = () => {
-      // Clear session when user leaves the page
       sessionStorage.removeItem("user-profile");
     };
     
-    // Use 'pagehide' event instead of 'beforeunload'
     window.addEventListener('pagehide', handlePageHide);
-    
-    // Also listen for visibility change (tab switch)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Optional: You can add logic here if needed
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
-
-  // 🔥 NEW: Check session periodically (every 30 seconds)
-  useEffect(() => {
-    const checkSessionInterval = setInterval(async () => {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) {
-        // Session expired - logout
-        sessionStorage.removeItem("user-profile");
-        setUser(null);
-        setView("home");
-      }
-    }, 30000); // Check every 30 seconds
-    
-    return () => clearInterval(checkSessionInterval);
   }, []);
 
   const handleSelectSpace = useCallback((id) => {
