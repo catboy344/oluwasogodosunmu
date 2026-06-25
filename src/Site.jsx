@@ -298,7 +298,7 @@ const BurstNav = ({ onSelectSpace }) => {
   ];
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative" ref={ref} style={{ zIndex: 9999 }}>
       <button
         onClick={handleToggle}
         className="flex items-center gap-2 font-body text-[13px] tracking-[0.12em] uppercase px-5 py-2.5 rounded-full"
@@ -340,7 +340,8 @@ const BurstNav = ({ onSelectSpace }) => {
                   border: "1px solid rgba(255,255,255,0.09)", 
                   boxShadow: "0 30px 80px rgba(0,0,0,0.9)", 
                   backdropFilter: "blur(20px)",
-                  zIndex: 9999 // Add this line
+                  zIndex: 99999,
+                  position: 'relative'
                 }}
               >
                 {SPACES.map((s, i) => (
@@ -388,19 +389,19 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
       className="fixed top-0 left-0 right-0 z-40"
       style={{ background: scrolled ? "rgba(7,8,12,0.9)" : "rgba(7,8,12,0.5)", backdropFilter: scrolled ? "blur(16px)" : "blur(8px)", borderBottom: "1px solid rgba(255,255,255,0.07)", transition: "all 0.4s" }}
     >
-      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
 
         {/* LEFT: Logo */}
         <div className="relative z-20 shrink-0">
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
             Oluwasogo Dosunmu
           </button>
-        </div> {/* <-- THIS CLOSING DIV WAS MISSING */}
+        </div>
 
         {/* CENTER: Scrolling tiles */}
-        <div className="absolute top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ left: 280, right: 200 }}>
+        <div className="absolute left-1/2 top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ transform: 'translateX(-50%)', maxWidth: '60%' }}>
           <motion.div
-            style={{ display: "flex", gap: 8, position: "absolute", left: 0 }}
+            style={{ display: "flex", gap: 8 }}
             animate={{ x: ["0%", "-50%"] }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           >
@@ -417,9 +418,9 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         </div>
 
         {/* RIGHT: My World */}
-        <div className="relative z-30 shrink-0">
+        <div className="relative z-50 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
-        </div> {/* <-- ALSO ADD THIS CLOSING DIV FOR THE RIGHT SECTION */}
+        </div>
 
       </div>
     </motion.header>
