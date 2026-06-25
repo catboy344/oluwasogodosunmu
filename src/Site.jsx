@@ -390,10 +390,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
             Oluwasogo Dosunmu
           </button>
-          <div className="absolute right-0 top-0 bottom-0 w-20 pointer-events-none"
-            style={{ background: "linear-gradient(to right, transparent, rgba(7,8,12,0.95))" }} />
-        </div>
-
+    
       {/* CENTER: Scrolling tiles */}
 <div className="absolute top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ left: 280, right: 200 }}>
           <motion.div
@@ -416,10 +413,6 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         {/* RIGHT: My World */}
         <div className="relative z-20 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
-          <div className="absolute left-0 top-0 bottom-0 w-20 pointer-events-none"
-            style={{ background: "linear-gradient(to left, transparent, rgba(7,8,12,0.95))" }} />
-        </div>
-
       </div>
     </motion.header>
   );
