@@ -453,7 +453,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
   );
 };
 /* ---------------------------------------------------------------
-   AUTH MODAL - THEMED WITH BOLD ANIMATED BACKGROUND
+   AUTH MODAL - WITH CURSOR-REACTIVE ANIMATIONS
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const { isDark } = useTheme();
@@ -468,8 +468,26 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const [dodgeCount, setDodgeCount] = useState(0);
   const [btnPos, setBtnPos] = useState({ x: 0, y: 0 });
   const [shake, setShake] = useState(false);
+  
+  // 🔥 CURSOR TRACKING
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
 
-  // Animated tiles data - MORE WORDS, BOLDER
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      y: ((e.clientY - rect.top) / rect.height) * 2 - 1,
+    });
+  };
+
+  const handleMouseEnter = () => setIsHovering(true);
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setMousePos({ x: 0, y: 0 });
+  };
+
+  // Animated tiles data
   const animatedTiles = [
     "Author", "Poet", "Speaker", "Visionary", "Podcast", "Sermon", "Worship",
     "Prayer", "Faith", "Impact", "Words", "Hope", "Purpose", "Inspire",
@@ -619,27 +637,35 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* 🎨 BOLD ANIMATED TILES BACKGROUND */}
+      {/* 🎨 CURSOR-REACTIVE ANIMATED TILES BACKGROUND */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {animatedTiles.map((tile, i) => {
           const row = Math.floor(i / 6);
           const col = i % 6;
-          const xPos = 3 + col * 16 + Math.random() * 4;
-          const yPos = 3 + row * 14 + Math.random() * 6;
+          const baseX = 3 + col * 16 + Math.random() * 4;
+          const baseY = 3 + row * 14 + Math.random() * 6;
           const duration = 12 + Math.random() * 18;
           const delay = Math.random() * 8;
           const size = 70 + Math.random() * 60;
           const colorIndex = i % tileColors.length;
           const rotation = -15 + Math.random() * 30;
           
+          // 🔥 CURSOR REACTION - tiles move away from cursor
+          const cursorInfluence = isHovering ? 80 : 0;
+          const reactX = mousePos.x * cursorInfluence * (Math.random() * 0.5 + 0.5);
+          const reactY = mousePos.y * cursorInfluence * (Math.random() * 0.5 + 0.5);
+          
           return (
             <motion.div
               key={i}
               className="absolute rounded-2xl flex items-center justify-center font-body font-bold tracking-wide"
               style={{
-                left: `${xPos}%`,
-                top: `${yPos}%`,
+                left: `${baseX}%`,
+                top: `${baseY}%`,
                 width: size,
                 height: size * 0.45,
                 background: tileColors[colorIndex],
@@ -670,73 +696,96 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                 ease: "easeInOut",
                 times: [0, 0.2, 0.4, 0.6, 0.8, 1],
               }}
+              // 🔥 Apply cursor reaction as inline style
+              style={{
+                transform: isHovering 
+                  ? `translate(${reactX * 0.5}px, ${reactY * 0.5}px)`
+                  : 'translate(0px, 0px)',
+                transition: 'transform 0.15s ease-out',
+                ...(i % 2 === 0 && {
+                  transform: isHovering 
+                    ? `translate(${-reactX * 0.7}px, ${-reactY * 0.7}px)`
+                    : 'translate(0px, 0px)',
+                })
+              }}
             >
               {tile}
             </motion.div>
           );
         })}
         
-        {/* 🌟 GLOWING PARTICLES - MORE OBVIOUS */}
-        {[...Array(20)].map((_, i) => {
-          const size = 100 + Math.random() * 200;
-          const colors = isDark 
-            ? ['rgba(124,58,237,0.08)', 'rgba(37,99,235,0.08)', 'rgba(5,150,105,0.08)', 'rgba(232,178,61,0.08)']
-            : ['rgba(124,58,237,0.05)', 'rgba(37,99,235,0.05)', 'rgba(5,150,105,0.05)', 'rgba(232,178,61,0.05)'];
+        {/* 🌟 CURSOR-REACTIVE GLOW - follows cursor */}
+        <motion.div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: 300,
+            height: 300,
+            background: `radial-gradient(circle, ${isDark ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.06)'}, transparent 70%)`,
+            filter: 'blur(40px)',
+            x: mousePos.x * 200,
+            y: mousePos.y * 200,
+            transition: 'all 0.3s ease-out',
+          }}
+          animate={{
+            x: mousePos.x * 200,
+            y: mousePos.y * 200,
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        />
+        
+        {/* ✨ CURSOR-REACTIVE DOTS */}
+        {[...Array(30)].map((_, i) => {
+          const dotX = Math.random() * 100;
+          const dotY = Math.random() * 100;
+          const dotReact = isHovering ? 30 : 0;
           
           return (
             <motion.div
-              key={`glow-${i}`}
+              key={`dot-${i}`}
               className="absolute rounded-full"
               style={{
-                width: size,
-                height: size,
-                background: `radial-gradient(circle, ${colors[i % colors.length]}, transparent 70%)`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                filter: 'blur(20px)',
+                width: 3 + Math.random() * 5,
+                height: 3 + Math.random() * 5,
+                background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                left: `${dotX}%`,
+                top: `${dotY}%`,
               }}
               animate={{
-                x: [0, 80, -50, 60, -30, 0],
-                y: [0, -60, 40, -30, 20, 0],
-                scale: [1, 1.5, 0.7, 1.3, 0.9, 1],
+                x: isHovering ? mousePos.x * (20 + Math.random() * 30) : 0,
+                y: isHovering ? mousePos.y * (20 + Math.random() * 30) : 0,
+                scale: isHovering ? [1, 1.5, 1] : 1,
               }}
               transition={{
-                duration: 15 + Math.random() * 25,
-                repeat: Infinity,
-                ease: "easeInOut",
-                times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                duration: 0.3,
+                ease: "easeOut",
               }}
             />
           );
         })}
         
-        {/* ✨ FLOATING DOTS */}
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={`dot-${i}`}
-            className="absolute rounded-full"
-            style={{
-              width: 3 + Math.random() * 5,
-              height: 3 + Math.random() * 5,
-              background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, 30 + Math.random() * 50, -20 - Math.random() * 30, 0],
-              y: [0, -20 - Math.random() * 40, 10 + Math.random() * 30, 0],
-              opacity: [0.3, 1, 0.3, 0.6],
-            }}
-            transition={{
-              duration: 8 + Math.random() * 12,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+        {/* 🔥 CURSOR TRAIL - follows cursor with delay */}
+        <motion.div
+          className="absolute pointer-events-none"
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${isDark ? 'rgba(124,58,237,0.08)' : 'rgba(124,58,237,0.04)'}, transparent)`,
+            filter: 'blur(20px)',
+            x: mousePos.x * 200 - 30,
+            y: mousePos.y * 200 - 30,
+            transition: 'all 0.5s ease-out',
+          }}
+          animate={{
+            x: mousePos.x * 200 - 30,
+            y: mousePos.y * 200 - 30,
+            scale: isHovering ? [1, 1.3, 1] : 1,
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
       </div>
 
-      {/* Auth Modal */}
+      {/* Auth Modal - Same as before */}
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -752,6 +801,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           backdropFilter: "blur(20px)"
         }}
       >
+        {/* Modal content - same as before */}
         <button 
           onClick={() => { 
             onClose(); 
