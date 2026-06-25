@@ -385,10 +385,7 @@ const BurstNav = ({ onSelectSpace }) => {
 };
 
 /* ---------------------------------------------------------------
-   NAV - THEMED
---------------------------------------------------------------- */
-/* ---------------------------------------------------------------
-   NAV - THEMED (UPDATED)
+   NAV - THEMED (Theme Toggle in front of Logo)
 --------------------------------------------------------------- */
 const Nav = ({ onSelectSpace, onGoHome }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -414,8 +411,10 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     >
       <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
 
-        {/* LEFT: Logo */}
-        <div className="relative z-20 shrink-0 mr-12">
+        {/* LEFT: Theme Toggle + Logo */}
+        <div className="relative z-20 shrink-0 flex items-center gap-3 mr-12">
+          {/* Theme Toggle - NOW IN FRONT OF LOGO */}
+          <ThemeToggle />
           <button 
             onClick={onGoHome} 
             className="font-fraunces font-bold text-[18px] md:text-[20px]" 
@@ -444,10 +443,9 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           </motion.div>
         </div>
 
-        {/* RIGHT: My World + Theme Toggle (ThemeToggle is now BEHIND My World) */}
+        {/* RIGHT: My World */}
         <div className="relative z-50 shrink-0 flex items-center gap-3 ml-12">
           <BurstNav onSelectSpace={onSelectSpace} />
-          <ThemeToggle />
         </div>
 
       </div>
