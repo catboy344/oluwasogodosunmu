@@ -389,8 +389,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
       className="fixed top-0 left-0 right-0 z-40"
       style={{ background: scrolled ? "rgba(7,8,12,0.9)" : "rgba(7,8,12,0.5)", backdropFilter: scrolled ? "blur(16px)" : "blur(8px)", borderBottom: "1px solid rgba(255,255,255,0.07)", transition: "all 0.4s" }}
     >
-      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
-
+      <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">  {/* REMOVED overflow-hidden */}
+        
         {/* LEFT: Logo */}
         <div className="relative z-20 shrink-0">
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
