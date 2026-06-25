@@ -390,9 +390,10 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           <button onClick={onGoHome} className="font-fraunces font-bold text-[18px] md:text-[20px]" style={{ color: "#FFFFFF" }}>
             Oluwasogo Dosunmu
           </button>
-    
-      {/* CENTER: Scrolling tiles */}
-<div className="absolute top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ left: 280, right: 200 }}>
+        </div> {/* <-- THIS CLOSING DIV WAS MISSING */}
+
+        {/* CENTER: Scrolling tiles */}
+        <div className="absolute top-0 bottom-0 z-10 flex items-center overflow-hidden" style={{ left: 280, right: 200 }}>
           <motion.div
             style={{ display: "flex", gap: 8, position: "absolute", left: 0 }}
             animate={{ x: ["0%", "-50%"] }}
@@ -413,6 +414,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
         {/* RIGHT: My World */}
         <div className="relative z-20 shrink-0">
           <BurstNav onSelectSpace={onSelectSpace} />
+        </div> {/* <-- ALSO ADD THIS CLOSING DIV FOR THE RIGHT SECTION */}
+
       </div>
     </motion.header>
   );
