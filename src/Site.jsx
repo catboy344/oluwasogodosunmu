@@ -452,9 +452,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
     </motion.header>
   );
 };
-
 /* ---------------------------------------------------------------
-   AUTH MODAL - THEMED WITH ANIMATED BACKGROUND
+   AUTH MODAL - THEMED WITH BOLD ANIMATED BACKGROUND
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const { isDark } = useTheme();
@@ -470,17 +469,21 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const [btnPos, setBtnPos] = useState({ x: 0, y: 0 });
   const [shake, setShake] = useState(false);
 
-  // Animated tiles data
+  // Animated tiles data - MORE WORDS, BOLDER
   const animatedTiles = [
     "Author", "Poet", "Speaker", "Visionary", "Podcast", "Sermon", "Worship",
     "Prayer", "Faith", "Impact", "Words", "Hope", "Purpose", "Inspire",
-    "Healing", "Mend", "Mirror", "Breathe", "Listen", "Speak", "Believe"
+    "Healing", "Mend", "Mirror", "Breathe", "Listen", "Speak", "Believe",
+    "Create", "Dream", "Rise", "Shine", "Lead", "Serve", "Love",
+    "Write", "Sing", "Pray", "Preach", "Teach", "Guide", "Illuminate",
+    "Transform", "Renew", "Restore", "Revive", "Awaken", "Empower", "Ignite"
   ];
 
   const tileColors = [
-    "rgba(124,58,237,0.08)", "rgba(37,99,235,0.08)", "rgba(5,150,105,0.08)",
-    "rgba(220,38,38,0.08)", "rgba(232,178,61,0.08)", "rgba(232,93,158,0.08)",
-    "rgba(56,189,176,0.08)", "rgba(242,148,77,0.08)", "rgba(155,130,240,0.08)"
+    "rgba(124,58,237,0.15)", "rgba(37,99,235,0.15)", "rgba(5,150,105,0.15)",
+    "rgba(220,38,38,0.15)", "rgba(232,178,61,0.15)", "rgba(232,93,158,0.15)",
+    "rgba(56,189,176,0.15)", "rgba(242,148,77,0.15)", "rgba(155,130,240,0.15)",
+    "rgba(236,72,153,0.15)", "rgba(52,211,153,0.15)", "rgba(251,146,60,0.15)"
   ];
 
   const dodge = () => {
@@ -610,55 +613,62 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     <motion.div 
       className="fixed inset-0 z-50 flex items-center justify-center px-5 overflow-hidden" 
       style={{ 
-        background: isDark ? "rgba(0,0,0,0.88)" : "rgba(255,255,255,0.88)", 
-        backdropFilter: "blur(12px)" 
+        background: isDark ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.92)", 
+        backdropFilter: "blur(16px)" 
       }} 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
     >
-      {/* 🎨 ANIMATED TILES BACKGROUND */}
+      {/* 🎨 BOLD ANIMATED TILES BACKGROUND */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {animatedTiles.map((tile, i) => {
-          const row = Math.floor(i / 7);
-          const col = i % 7;
-          const xPos = 5 + col * 14 + Math.random() * 3;
-          const yPos = 5 + row * 20 + Math.random() * 5;
-          const duration = 15 + Math.random() * 20;
-          const delay = Math.random() * 10;
-          const size = 60 + Math.random() * 40;
+          const row = Math.floor(i / 6);
+          const col = i % 6;
+          const xPos = 3 + col * 16 + Math.random() * 4;
+          const yPos = 3 + row * 14 + Math.random() * 6;
+          const duration = 12 + Math.random() * 18;
+          const delay = Math.random() * 8;
+          const size = 70 + Math.random() * 60;
           const colorIndex = i % tileColors.length;
+          const rotation = -15 + Math.random() * 30;
           
           return (
             <motion.div
               key={i}
-              className="absolute rounded-xl flex items-center justify-center font-body font-medium"
+              className="absolute rounded-2xl flex items-center justify-center font-body font-bold tracking-wide"
               style={{
                 left: `${xPos}%`,
                 top: `${yPos}%`,
                 width: size,
-                height: size * 0.4,
+                height: size * 0.45,
                 background: tileColors[colorIndex],
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
-                color: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
-                fontSize: `${size * 0.18}px`,
-                letterSpacing: '0.05em',
+                border: `2px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+                color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+                fontSize: `${size * 0.2}px`,
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
-                padding: '0 12px',
-                backdropFilter: 'blur(2px)',
+                padding: '0 16px',
+                backdropFilter: 'blur(4px)',
+                boxShadow: isDark 
+                  ? '0 8px 32px rgba(0,0,0,0.2)' 
+                  : '0 8px 32px rgba(0,0,0,0.04)',
+                rotate: rotation,
+                transformOrigin: 'center',
               }}
               animate={{
-                x: [0, 60, -30, 40, -20, 0],
-                y: [0, -40, 20, -30, 10, 0],
-                rotate: [0, 5, -3, 4, -2, 0],
-                scale: [1, 1.05, 0.95, 1.02, 0.98, 1],
+                x: [0, 80, -50, 60, -30, 40, 0],
+                y: [0, -60, 30, -40, 20, -30, 0],
+                rotate: [rotation, rotation + 12, rotation - 8, rotation + 6, rotation - 4, rotation],
+                scale: [1, 1.12, 0.88, 1.08, 0.92, 1],
               }}
               transition={{
                 duration: duration,
                 repeat: Infinity,
                 delay: delay,
                 ease: "easeInOut",
+                times: [0, 0.2, 0.4, 0.6, 0.8, 1],
               }}
             >
               {tile}
@@ -666,25 +676,59 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           );
         })}
         
-        {/* Floating particles/glow effects */}
-        {[...Array(12)].map((_, i) => (
+        {/* 🌟 GLOWING PARTICLES - MORE OBVIOUS */}
+        {[...Array(20)].map((_, i) => {
+          const size = 100 + Math.random() * 200;
+          const colors = isDark 
+            ? ['rgba(124,58,237,0.08)', 'rgba(37,99,235,0.08)', 'rgba(5,150,105,0.08)', 'rgba(232,178,61,0.08)']
+            : ['rgba(124,58,237,0.05)', 'rgba(37,99,235,0.05)', 'rgba(5,150,105,0.05)', 'rgba(232,178,61,0.05)'];
+          
+          return (
+            <motion.div
+              key={`glow-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: size,
+                height: size,
+                background: `radial-gradient(circle, ${colors[i % colors.length]}, transparent 70%)`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                filter: 'blur(20px)',
+              }}
+              animate={{
+                x: [0, 80, -50, 60, -30, 0],
+                y: [0, -60, 40, -30, 20, 0],
+                scale: [1, 1.5, 0.7, 1.3, 0.9, 1],
+              }}
+              transition={{
+                duration: 15 + Math.random() * 25,
+                repeat: Infinity,
+                ease: "easeInOut",
+                times: [0, 0.2, 0.4, 0.6, 0.8, 1],
+              }}
+            />
+          );
+        })}
+        
+        {/* ✨ FLOATING DOTS */}
+        {[...Array(30)].map((_, i) => (
           <motion.div
-            key={`glow-${i}`}
+            key={`dot-${i}`}
             className="absolute rounded-full"
             style={{
-              width: 80 + Math.random() * 120,
-              height: 80 + Math.random() * 120,
-              background: `radial-gradient(circle, ${isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)'}, transparent)`,
+              width: 3 + Math.random() * 5,
+              height: 3 + Math.random() * 5,
+              background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              x: [0, 50, -30, 20, 0],
-              y: [0, -30, 40, -20, 0],
-              scale: [1, 1.3, 0.8, 1.2, 1],
+              x: [0, 30 + Math.random() * 50, -20 - Math.random() * 30, 0],
+              y: [0, -20 - Math.random() * 40, 10 + Math.random() * 30, 0],
+              opacity: [0.3, 1, 0.3, 0.6],
             }}
             transition={{
-              duration: 20 + Math.random() * 30,
+              duration: 8 + Math.random() * 12,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -703,8 +747,8 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           background: isDark ? "rgba(14,16,21,0.95)" : "rgba(255,255,255,0.95)", 
           border: `1px solid ${colors.borderColor}`,
           boxShadow: isDark 
-            ? "0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(124,58,237,0.05)" 
-            : "0 30px 80px rgba(0,0,0,0.08), 0 0 60px rgba(124,58,237,0.03)",
+            ? "0 30px 80px rgba(0,0,0,0.8), 0 0 80px rgba(124,58,237,0.08)" 
+            : "0 30px 80px rgba(0,0,0,0.08), 0 0 80px rgba(124,58,237,0.04)",
           backdropFilter: "blur(20px)"
         }}
       >
@@ -894,7 +938,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     </motion.div>
   );
 };
-
 /* ---------------------------------------------------------------
    ENGAGEMENT
 --------------------------------------------------------------- */
