@@ -454,7 +454,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
 };
 
 /* ---------------------------------------------------------------
-   AUTH MODAL - THEMED
+   AUTH MODAL - THEMED WITH ANIMATED BACKGROUND
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const { isDark } = useTheme();
@@ -469,6 +469,19 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const [dodgeCount, setDodgeCount] = useState(0);
   const [btnPos, setBtnPos] = useState({ x: 0, y: 0 });
   const [shake, setShake] = useState(false);
+
+  // Animated tiles data
+  const animatedTiles = [
+    "Author", "Poet", "Speaker", "Visionary", "Podcast", "Sermon", "Worship",
+    "Prayer", "Faith", "Impact", "Words", "Hope", "Purpose", "Inspire",
+    "Healing", "Mend", "Mirror", "Breathe", "Listen", "Speak", "Believe"
+  ];
+
+  const tileColors = [
+    "rgba(124,58,237,0.08)", "rgba(37,99,235,0.08)", "rgba(5,150,105,0.08)",
+    "rgba(220,38,38,0.08)", "rgba(232,178,61,0.08)", "rgba(232,93,158,0.08)",
+    "rgba(56,189,176,0.08)", "rgba(242,148,77,0.08)", "rgba(155,130,240,0.08)"
+  ];
 
   const dodge = () => {
     const directions = [
@@ -594,14 +607,106 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const dodgeMsgs = ["Hmm, not yet... 😏", "Almost! Try again 😅", "Okay okay, you got me 🎉"];
 
   return (
-    <motion.div className="fixed inset-0 z-50 flex items-center justify-center px-5" style={{ background: isDark ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)", backdropFilter: "blur(8px)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+    <motion.div 
+      className="fixed inset-0 z-50 flex items-center justify-center px-5 overflow-hidden" 
+      style={{ 
+        background: isDark ? "rgba(0,0,0,0.88)" : "rgba(255,255,255,0.88)", 
+        backdropFilter: "blur(12px)" 
+      }} 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }}
+    >
+      {/* 🎨 ANIMATED TILES BACKGROUND */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {animatedTiles.map((tile, i) => {
+          const row = Math.floor(i / 7);
+          const col = i % 7;
+          const xPos = 5 + col * 14 + Math.random() * 3;
+          const yPos = 5 + row * 20 + Math.random() * 5;
+          const duration = 15 + Math.random() * 20;
+          const delay = Math.random() * 10;
+          const size = 60 + Math.random() * 40;
+          const colorIndex = i % tileColors.length;
+          
+          return (
+            <motion.div
+              key={i}
+              className="absolute rounded-xl flex items-center justify-center font-body font-medium"
+              style={{
+                left: `${xPos}%`,
+                top: `${yPos}%`,
+                width: size,
+                height: size * 0.4,
+                background: tileColors[colorIndex],
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                color: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
+                fontSize: `${size * 0.18}px`,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+                padding: '0 12px',
+                backdropFilter: 'blur(2px)',
+              }}
+              animate={{
+                x: [0, 60, -30, 40, -20, 0],
+                y: [0, -40, 20, -30, 10, 0],
+                rotate: [0, 5, -3, 4, -2, 0],
+                scale: [1, 1.05, 0.95, 1.02, 0.98, 1],
+              }}
+              transition={{
+                duration: duration,
+                repeat: Infinity,
+                delay: delay,
+                ease: "easeInOut",
+              }}
+            >
+              {tile}
+            </motion.div>
+          );
+        })}
+        
+        {/* Floating particles/glow effects */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={`glow-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: 80 + Math.random() * 120,
+              height: 80 + Math.random() * 120,
+              background: `radial-gradient(circle, ${isDark ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.04)'}, transparent)`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              x: [0, 50, -30, 20, 0],
+              y: [0, -30, 40, -20, 0],
+              scale: [1, 1.3, 0.8, 1.2, 1],
+            }}
+            transition={{
+              duration: 20 + Math.random() * 30,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Auth Modal */}
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm rounded-3xl p-8 relative"
-        style={{ background: colors.backgroundModal, border: `1px solid ${colors.borderColor}` }}
+        exit={{ opacity: 0, y: 30 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm rounded-3xl p-8 relative z-10"
+        style={{ 
+          background: isDark ? "rgba(14,16,21,0.95)" : "rgba(255,255,255,0.95)", 
+          border: `1px solid ${colors.borderColor}`,
+          boxShadow: isDark 
+            ? "0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(124,58,237,0.05)" 
+            : "0 30px 80px rgba(0,0,0,0.08), 0 0 60px rgba(124,58,237,0.03)",
+          backdropFilter: "blur(20px)"
+        }}
       >
         <button 
           onClick={() => { 
@@ -612,7 +717,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             setDodgeCount(0);
             setBtnPos({ x: 0, y: 0 });
           }} 
-          className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center" 
+          className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10" 
           style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
         >
           <X size={15} color={colors.textSecondary} />
@@ -671,9 +776,9 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
         )}
         
         {!success && (
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-3 relative z-10">
             {mode === "signup" && (
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
                 <User size={15} color={colors.textMuted} />
                 <input 
                   value={name} 
@@ -686,7 +791,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
               </div>
             )}
             
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
               <Mail size={15} color={colors.textMuted} />
               <input 
                 value={email} 
@@ -699,7 +804,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
               />
             </div>
             
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
+            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
               <Lock size={15} color={colors.textMuted} />
               <input 
                 value={password} 
@@ -727,7 +832,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                   y: { type: "spring", stiffness: 260, damping: 18 }, 
                   rotate: { duration: 0.4 } 
                 }}
-                className="absolute inset-0 w-full rounded-2xl font-body text-[14px] font-semibold"
+                className="absolute inset-0 w-full rounded-2xl font-body text-[14px] font-semibold transition-opacity"
                 style={{ 
                   background: dodgeCount >= 2 
                     ? "linear-gradient(135deg,#059669,#10B981)" 
@@ -755,7 +860,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             
             <button 
               onClick={handleGoogleLogin}
-              className="w-full py-3.5 rounded-2xl font-body text-[13.5px] flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl font-body text-[13.5px] flex items-center justify-center gap-2 transition-colors hover:bg-white/10"
               style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -778,6 +883,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                   setBtnPos({ x: 0, y: 0 });
                 }} 
                 style={{ color: "#818CF8" }}
+                className="hover:underline transition-all"
               >
                 {mode === "signup" ? "Log in" : "Sign up"}
               </button>
