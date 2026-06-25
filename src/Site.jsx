@@ -387,6 +387,9 @@ const BurstNav = ({ onSelectSpace }) => {
 /* ---------------------------------------------------------------
    NAV - THEMED
 --------------------------------------------------------------- */
+/* ---------------------------------------------------------------
+   NAV - THEMED (UPDATED)
+--------------------------------------------------------------- */
 const Nav = ({ onSelectSpace, onGoHome }) => {
   const [scrolled, setScrolled] = useState(false);
   const { isDark } = useTheme();
@@ -441,10 +444,10 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
           </motion.div>
         </div>
 
-        {/* RIGHT: My World + Theme Toggle */}
+        {/* RIGHT: My World + Theme Toggle (ThemeToggle is now BEHIND My World) */}
         <div className="relative z-50 shrink-0 flex items-center gap-3 ml-12">
-          <ThemeToggle />
           <BurstNav onSelectSpace={onSelectSpace} />
+          <ThemeToggle />
         </div>
 
       </div>
