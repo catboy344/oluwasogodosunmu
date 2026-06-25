@@ -328,26 +328,25 @@ const BurstNav = ({ onSelectSpace }) => {
               </motion.div>
             ))}
 
-          {phase === "list" && (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95, y: -25 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    exit={{ opacity: 0, scale: 0.92, y: -6 }}
-    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-    className="absolute right-0 mt-3 w-[290px] rounded-2xl overflow-y-auto"
-    style={{ 
-      background: "rgba(12,13,18,0.97)", 
-      border: "1px solid rgba(255,255,255,0.09)", 
-      boxShadow: "0 30px 80px rgba(0,0,0,0.9)", 
-      backdropFilter: "blur(20px)",
-      zIndex: 99999,
-      maxHeight: '80vh'
-       }}
-  >
-    {SPACES.map((s, i) => (
+            {phase === "list" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -25 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute right-0 mt-3 w-[290px] rounded-2xl overflow-hidden"
+                style={{ 
+                  background: "rgba(12,13,18,0.97)", 
+                  border: "1px solid rgba(255,255,255,0.09)", 
+                  boxShadow: "0 30px 80px rgba(0,0,0,0.9)", 
+                  backdropFilter: "blur(20px)",
+                  zIndex: 99999
+                }}
+              >
+                {SPACES.map((s, i) => (
                   <motion.button
                     key={s.id}
-                    initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                    initial={{ opacity: 0, y: -40, scale: 0.85 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: (SPACES.length - 1 - i) * 0.2, type: "spring", stiffness: 300, damping: 20 }}
                     onClick={() => { setPhase("closed"); onSelectSpace(s.id); }}
