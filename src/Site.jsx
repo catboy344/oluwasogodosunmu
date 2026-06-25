@@ -939,7 +939,6 @@ export default function Site() {
       const { data: { session } } = await sb.auth.getSession();
       
       if (session) {
-        // User is logged in via Supabase
         const user = session.user;
         const profile = {
           name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
@@ -947,21 +946,18 @@ export default function Site() {
           id: user.id
         };
         
-        // Save to sessionStorage if not already there
         if (!storedUser) {
           sessionStorage.setItem("user-profile", JSON.stringify(profile));
         }
         
         setUser(profile);
         
-        // If there was a pending space, navigate to it
         if (pendingSpace) {
           setView(pendingSpace);
           setPendingSpace(null);
           window.scrollTo(0, 0);
         }
       } else if (storedUser) {
-        // No session but stored user exists - clear it
         sessionStorage.removeItem("user-profile");
         setUser(null);
       }
@@ -970,17 +966,43 @@ export default function Site() {
     checkSession();
   }, []);
 
-  // Auto-logout when tab/browser is closed
+  // 🔥 FIXED: Auto-logout when tab/browser is closed
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handlePageHide = () => {
+      // Clear session when user leaves the page
       sessionStorage.removeItem("user-profile");
     };
     
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // Use 'pagehide' event instead of 'beforeunload'
+    window.addEventListener('pagehide', handlePageHide);
+    
+    // Also listen for visibility change (tab switch)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Optional: You can add logic here if needed
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }, []);
+
+  // 🔥 NEW: Check session periodically (every 30 seconds)
+  useEffect(() => {
+    const checkSessionInterval = setInterval(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        // Session expired - logout
+        sessionStorage.removeItem("user-profile");
+        setUser(null);
+        setView("home");
+      }
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(checkSessionInterval);
   }, []);
 
   const handleSelectSpace = useCallback((id) => {
