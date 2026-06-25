@@ -467,11 +467,11 @@ const AuthModal = ({ onClose, onAuth }) => {
       return;
     }
 
-    // After dodging twice, actually submit
     setLoading(true);
 
     try {
       if (mode === "signup") {
+        // SIGN UP
         const { data, error } = await sb.auth.signUp({
           email: email,
           password: password,
@@ -479,16 +479,53 @@ const AuthModal = ({ onClose, onAuth }) => {
             data: { full_name: name },
           },
         });
-        if (error) throw error;
+        
+        if (error) {
+          // Check if user already exists
+          if (error.message.includes("User already registered") || 
+              error.message.includes("already registered")) {
+            setError("This email is already registered. Please log in instead.");
+            setTimeout(() => {
+              setMode("login");
+              setDodgeCount(0);
+              setBtnPos({ x: 0, y: 0 });
+              setError("");
+            }, 3000);
+          } else {
+            throw error;
+          }
+          return;
+        }
+        
         if (data.user) {
-          onAuth({ name: name, email: email, id: data.user.id });
+          // Check if email confirmation is required
+          if (data.user.confirmed_at === null) {
+            setError("📧 Confirmation email sent! Please check your inbox and spam folder.");
+            setTimeout(() => {
+              onClose();
+            }, 4000);
+          } else {
+            onAuth({ name: name, email: email, id: data.user.id });
+          }
         }
       } else {
+        // LOGIN
         const { data, error } = await sb.auth.signInWithPassword({
           email: email,
           password: password,
         });
-        if (error) throw error;
+        
+        if (error) {
+          if (error.message.includes("Email not confirmed")) {
+            setError("📧 Please confirm your email first. Check your inbox or spam folder!");
+          } else if (error.message.includes("Invalid login credentials")) {
+            setError("❌ Wrong email or password. Please try again.");
+          } else {
+            throw error;
+          }
+          return;
+        }
+        
         if (data.user) {
           onAuth({ 
             name: data.user.user_metadata?.full_name || email.split("@")[0],
@@ -528,8 +565,36 @@ const AuthModal = ({ onClose, onAuth }) => {
         </p>
         
         {error && (
-          <div className="mb-4 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
-            <p className="font-body text-[13px]" style={{ color: "#ef4444" }}>{error}</p>
+          <div className="mb-4 p-3 rounded-xl" style={{ 
+            background: error.includes("✅") || error.includes("📧") 
+              ? "rgba(16,185,129,0.15)" 
+              : "rgba(239,68,68,0.15)", 
+            border: error.includes("✅") || error.includes("📧")
+              ? "1px solid rgba(16,185,129,0.3)"
+              : "1px solid rgba(239,68,68,0.3)" 
+          }}>
+            <p className="font-body text-[13px]" style={{ 
+              color: error.includes("✅") || error.includes("📧") 
+                ? "#10B981" 
+                : "#ef4444" 
+            }}>
+              {error}
+            </p>
+            {error.includes("already registered") && (
+              <button 
+                type="button"
+                onClick={() => { 
+                  setMode("login"); 
+                  setDodgeCount(0); 
+                  setBtnPos({ x: 0, y: 0 }); 
+                  setError("");
+                }}
+                style={{ color: "#818CF8", fontSize: "13px", marginTop: "8px" }}
+                className="font-body"
+              >
+                Go to Login →
+              </button>
+            )}
           </div>
         )}
         
