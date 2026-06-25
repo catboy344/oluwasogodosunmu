@@ -427,8 +427,8 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
 /* ---------------------------------------------------------------
    AUTH MODAL (unchanged)
 --------------------------------------------------------------- */
-const AuthModal = ({ onClose, onAuth }) => {
-  const [mode, setMode] = useState("signup");
+const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
+  const [mode, setMode] = useState(defaultMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -497,8 +497,6 @@ const AuthModal = ({ onClose, onAuth }) => {
         }
         
         if (data.user) {
-          // 🔥 FIX: NEVER auto-login on signup
-          // Always show confirmation message and close modal
           setSuccess(true);
           setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
           setLoading(false);
@@ -506,19 +504,15 @@ const AuthModal = ({ onClose, onAuth }) => {
           setPassword("");
           setName("");
           
-          // Close modal after 5 seconds
           setTimeout(() => {
             onClose();
             setError("");
             setSuccess(false);
           }, 5000);
-          
-          // IMPORTANT: Do NOT call onAuth() here!
-          // User must confirm email first before logging in
           return;
         }
       } else {
-        // LOGIN - Only login if email is confirmed
+        // LOGIN
         const { data, error } = await sb.auth.signInWithPassword({
           email: email,
           password: password,
@@ -536,13 +530,11 @@ const AuthModal = ({ onClose, onAuth }) => {
         }
         
         if (data.user) {
-          // Check if user is confirmed before logging in
           if (data.user.confirmed_at === null) {
             setError("📧 Please confirm your email first. Check your inbox or spam folder!");
             return;
           }
           
-          // Only log in if confirmed
           onAuth({ 
             name: data.user.user_metadata?.full_name || email.split("@")[0],
             email: email,
@@ -569,7 +561,18 @@ const AuthModal = ({ onClose, onAuth }) => {
         className="w-full max-w-sm rounded-3xl p-8 relative"
         style={{ background: "#0E1015", border: "1px solid rgba(255,255,255,0.09)" }}
       >
-        <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <button 
+          onClick={() => { 
+            onClose(); 
+            setMode(defaultMode); 
+            setError(""); 
+            setSuccess(false);
+            setDodgeCount(0);
+            setBtnPos({ x: 0, y: 0 });
+          }} 
+          className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center" 
+          style={{ background: "rgba(255,255,255,0.06)" }}
+        >
           <X size={15} color="rgba(255,255,255,0.5)" />
         </button>
         
@@ -920,21 +923,17 @@ export default function Site() {
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
 
-  // 🔥 FIX 1: Check sessionStorage on load and verify session with Supabase
+  // Check sessionStorage on load and verify session with Supabase
   useEffect(() => {
     const checkSession = async () => {
-      // Check if user is in sessionStorage
       const storedUser = sessionStorage.getItem("user-profile");
       
       if (storedUser) {
-        // Verify session is still valid with Supabase
         const { data: { session } } = await sb.auth.getSession();
         
         if (session) {
-          // Session is valid - restore user
           setUser(JSON.parse(storedUser));
         } else {
-          // No valid session - clear storage
           sessionStorage.removeItem("user-profile");
           setUser(null);
         }
@@ -944,10 +943,9 @@ export default function Site() {
     checkSession();
   }, []);
 
-  // 🔥 FIX 2: Auto-logout when tab/browser is closed
+  // Auto-logout when tab/browser is closed
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Clear session when user closes the tab/browser
       sessionStorage.removeItem("user-profile");
     };
     
@@ -968,7 +966,6 @@ export default function Site() {
     }
   }, [user]);
 
-  // 🔥 FIX 3: Use sessionStorage instead of localStorage
   const handleAuth = (profile) => {
     setUser(profile); 
     sessionStorage.setItem("user-profile", JSON.stringify(profile)); 
@@ -980,9 +977,8 @@ export default function Site() {
     }
   };
 
-  // 🔥 FIX 4: Proper logout - clears session and Supabase session
   const logout = async () => { 
-    await sb.auth.signOut(); // Sign out from Supabase
+    await sb.auth.signOut();
     setUser(null); 
     setView("home"); 
     sessionStorage.removeItem("user-profile"); 
@@ -1022,7 +1018,13 @@ export default function Site() {
       {activeSpace && <SpaceView space={activeSpace} user={user} onBack={() => { setView("home"); window.scrollTo(0, 0); }} />}
 
       <AnimatePresence>
-        {authOpen && <AuthModal onClose={() => setAuthOpen(false)} onAuth={handleAuth} />}
+        {authOpen && (
+          <AuthModal 
+            onClose={() => setAuthOpen(false)} 
+            onAuth={handleAuth} 
+            defaultMode={pendingSpace ? "login" : "signup"}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
