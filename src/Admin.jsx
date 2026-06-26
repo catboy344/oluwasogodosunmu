@@ -4,15 +4,16 @@ import {
   Lock, LayoutDashboard, UploadCloud, FolderOpen, CreditCard, Users,
   Heart, MessageCircle, DollarSign, Trash2, LogOut,
   Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand,
-  CheckCircle2, Clock, Image, X, Eye
+  CheckCircle2, Clock, Image, X, Eye, Edit, Plus
 } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://mzhccgxxbznvinqyvust.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aGNjZ3h4YnpudmlucXl2dXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMzkwMTAsImV4cCI6MjA5NzgxNTAxMH0.z-KNumdmNKaXyYYgWGFo1ZIxNMPc31rNvGqvdIlMbFU";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
 /* ---------------------------------------------------------------
-   FONTS — same as main site
+   FONTS
 --------------------------------------------------------------- */
 const FontLoader = () => {
   useEffect(() => {
@@ -26,7 +27,7 @@ const FontLoader = () => {
 };
 
 /* ---------------------------------------------------------------
-   TOKENS — matches main site
+   TOKENS
 --------------------------------------------------------------- */
 const C = {
   bg: "#07080C",
@@ -69,6 +70,7 @@ async function uploadToCloudinary(file, folder = "gallery") {
   const data = await res.json();
   return { url: data.secure_url, publicId: data.public_id };
 }
+
 const SPACES = [
   { id: "whispers", title: "Whispers with Oluwasogo", Icon: Mic, type: "audio", accent: C.teal },
   { id: "speaks", title: "Sogo Speaks", Icon: Video, type: "video", accent: C.gold },
@@ -141,7 +143,6 @@ const AdminLogin = ({ onSuccess }) => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-sm"
       >
-        {/* Logo / header */}
         <div className="mb-10 text-center">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-5"
@@ -157,7 +158,6 @@ const AdminLogin = ({ onSuccess }) => {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={submit} className="space-y-4">
           <div className="relative">
             <input
@@ -212,6 +212,7 @@ const AdminLogin = ({ onSuccess }) => {
     </div>
   );
 };
+
 /* ---------------------------------------------------------------
    STAT CARD
 --------------------------------------------------------------- */
@@ -282,84 +283,85 @@ const Overview = ({ allContent, engagement }) => {
 };
 
 /* ---------------------------------------------------------------
-   PHOTOS — new section to manage gallery photos
+   PHOTOS
 --------------------------------------------------------------- */
 const Photos = () => {
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
-useEffect(() => {
-  const loadPhotos = async () => {
+
+  useEffect(() => {
+    const loadPhotos = async () => {
+      try {
+        const { data, error } = await sb
+          .from("photos")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error loading photos:", error);
+          return;
+        }
+        
+        if (data) {
+          setPhotos(data);
+        }
+      } catch (err) {
+        console.error("Failed to load photos:", err);
+      }
+    };
+    
+    loadPhotos();
+  }, []);
+
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploading(true);
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
+        const { data, error } = await sb
+          .from("photos")
+          .insert({
+            url: url,
+            public_id: publicId,
+            name: files[i].name,
+          })
+          .select();
+        
+        if (error) {
+          console.error("Supabase error:", error);
+          continue;
+        }
+        
+        if (data && data.length > 0) {
+          setPhotos(prev => [...prev, data[0]]);
+        }
+      } catch (err) {
+        console.error("Upload failed:", err);
+      }
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
+  const deletePhoto = async (id) => {
     try {
-      const { data, error } = await sb
+      const { error } = await sb
         .from("photos")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .delete()
+        .eq("id", id);
       
       if (error) {
-        console.error("Error loading photos:", error);
+        console.error("Delete error:", error);
         return;
       }
       
-      if (data) {
-        setPhotos(data);
-      }
+      setPhotos(prev => prev.filter(p => p.id !== id));
     } catch (err) {
-      console.error("Failed to load photos:", err);
+      console.error("Delete failed:", err);
     }
   };
-  
-  loadPhotos();
-}, []);
-const handleFiles = async (e) => {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-  setUploading(true);
-  for (let i = 0; i < files.length; i++) {
-    try {
-      const { url, publicId } = await uploadToCloudinary(files[i], "gallery");
-      const { data, error } = await sb
-        .from("photos")
-        .insert({
-          url: url,
-          public_id: publicId,
-          name: files[i].name,
-        })
-        .select();
-      
-      if (error) {
-        console.error("Supabase error:", error);
-        continue;
-      }
-      
-      if (data && data.length > 0) {
-        setPhotos(prev => [...prev, data[0]]);
-      }
-    } catch (err) {
-      console.error("Upload failed:", err);
-    }
-  }
-  setUploading(false);
-  e.target.value = "";
-};
-  const deletePhoto = async (id) => {
-  try {
-    // Delete from Supabase
-    const { error } = await sb
-      .from("photos")
-      .delete()
-      .eq("id", id);
-    
-    if (error) {
-      console.error("Delete error:", error);
-      return;
-    }
-    
-    // Then remove from UI
-    setPhotos(prev => prev.filter(p => p.id !== id));
-  } catch (err) {
-    console.error("Delete failed:", err);
-  }
-};
 
   return (
     <div>
@@ -382,7 +384,7 @@ const handleFiles = async (e) => {
           </p>
           <p className="font-body text-[12px] mt-1" style={{ color: C.faint }}>JPG, PNG, WEBP — multiple at once</p>
         </div>
-      <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} disabled={uploading} />
+        <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} disabled={uploading} />
       </label>
 
       {photos.length === 0 ? (
@@ -412,6 +414,7 @@ const handleFiles = async (e) => {
     </div>
   );
 };
+
 /* ---------------------------------------------------------------
    UPLOAD CONTENT
 --------------------------------------------------------------- */
@@ -609,18 +612,322 @@ const Audience = () => (
   </div>
 );
 
-/* ---------------------------------------------------------------
-   ROOT
---------------------------------------------------------------- */
+/* ===============================================================
+   🔥 ADS MANAGEMENT WITH VIDEO UPLOAD
+   =============================================================== */
+const AdsManagement = () => {
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [editingAd, setEditingAd] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    image_url: '',
+    link_url: '',
+    video_url: '',
+    position: 'home',
+    active: true
+  });
+
+  // Fetch ads
+  const fetchAds = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await sb
+        .from("ads")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAds(data || []);
+    } catch (err) {
+      console.error("Error fetching ads:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAds();
+  }, []);
+
+  // Handle video upload
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setUploadingVideo(true);
+    try {
+      const { url } = await uploadToCloudinary(file, "ads_videos");
+      setFormData({...formData, video_url: url});
+      alert("✅ Video uploaded successfully!");
+    } catch (err) {
+      alert("❌ Upload failed: " + err.message);
+    } finally {
+      setUploadingVideo(false);
+      e.target.value = "";
+    }
+  };
+
+  // Save ad
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (editingAd) {
+        const { error } = await sb
+          .from("ads")
+          .update(formData)
+          .eq("id", editingAd.id);
+        if (error) throw error;
+      } else {
+        const { error } = await sb
+          .from("ads")
+          .insert([formData]);
+        if (error) throw error;
+      }
+      await fetchAds();
+      setShowForm(false);
+      setEditingAd(null);
+      setFormData({ title: '', image_url: '', link_url: '', video_url: '', position: 'home', active: true });
+    } catch (err) {
+      console.error("Error saving ad:", err);
+      alert("Error saving ad: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete ad
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this ad?")) return;
+    setLoading(true);
+    try {
+      const { error } = await sb
+        .from("ads")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      await fetchAds();
+    } catch (err) {
+      console.error("Error deleting ad:", err);
+      alert("Error deleting ad: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Edit ad
+  const handleEdit = (ad) => {
+    setEditingAd(ad);
+    setFormData({
+      title: ad.title,
+      image_url: ad.image_url || '',
+      link_url: ad.link_url || '',
+      video_url: ad.video_url || '',
+      position: ad.position || 'home',
+      active: ad.active
+    });
+    setShowForm(true);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="font-fraunces text-2xl font-bold" style={{ color: C.white }}>📢 Ads Management</h2>
+          <p className="font-body text-[13px] mt-1" style={{ color: C.faint }}>Create and manage ads. Supports images, videos (MP4, WebM), and YouTube/Vimeo links.</p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingAd(null);
+            setFormData({ title: '', image_url: '', link_url: '', video_url: '', position: 'home', active: true });
+            setShowForm(!showForm);
+          }}
+          className="px-4 py-2.5 rounded-xl font-body text-[13px] font-semibold flex items-center gap-2"
+          style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+        >
+          <Plus size={16} />
+          {showForm ? 'Cancel' : 'Add Ad'}
+        </button>
+      </div>
+
+      {/* Ad Form */}
+      {showForm && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-6 rounded-2xl"
+          style={{ background: C.surface, border: `1px solid ${C.border}` }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-body text-[12px] mb-1" style={{ color: C.faint }}>Ad Title *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl font-body text-[13px] outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-body text-[12px] mb-1" style={{ color: C.faint }}>Image URL (Thumbnail)</label>
+                <input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl font-body text-[13px] outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div>
+                <label className="block font-body text-[12px] mb-1" style={{ color: C.faint }}>Link URL (YouTube/Vimeo)</label>
+                <input
+                  type="url"
+                  value={formData.link_url}
+                  onChange={(e) => setFormData({...formData, link_url: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl font-body text-[13px] outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                  placeholder="https://youtube.com/watch?v=xxxxx"
+                />
+                <p className="font-body text-[10px] mt-1" style={{ color: C.faint }}>OR upload a video below</p>
+              </div>
+              <div>
+                <label className="block font-body text-[12px] mb-1" style={{ color: C.faint }}>OR Upload Video (MP4, WebM)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    disabled={uploadingVideo}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-body text-[13px] outline-none cursor-pointer"
+                    style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                  />
+                  {uploadingVideo && <span className="font-body text-[12px]" style={{ color: C.good }}>⏳ Uploading...</span>}
+                </div>
+                {formData.video_url && (
+                  <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>
+                    ✅ Video uploaded: <span className="truncate" style={{ color: C.faint }}>{formData.video_url}</span>
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block font-body text-[12px] mb-1" style={{ color: C.faint }}>Position</label>
+                <select
+                  value={formData.position}
+                  onChange={(e) => setFormData({...formData, position: e.target.value})}
+                  className="w-full px-4 py-2.5 rounded-xl font-body text-[13px] outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                >
+                  <option value="home">Homepage</option>
+                  <option value="sidebar">Sidebar</option>
+                  <option value="footer">Footer</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 font-body text-[13px]" style={{ color: C.dim }}>
+                <input
+                  type="checkbox"
+                  checked={formData.active}
+                  onChange={(e) => setFormData({...formData, active: e.target.checked})}
+                  className="w-4 h-4 rounded"
+                />
+                Active
+              </label>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2.5 rounded-xl font-body text-[13px] font-semibold"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+              >
+                {loading ? 'Saving...' : (editingAd ? 'Update Ad' : 'Save Ad')}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      )}
+
+      {/* Ads List */}
+      <div className="space-y-2">
+        {ads.map((ad, i) => (
+          <motion.div
+            key={ad.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="p-4 rounded-2xl flex items-center justify-between gap-4"
+            style={{ background: i % 2 === 0 ? C.surface : C.fainter, border: `1px solid ${C.border}` }}
+          >
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {ad.image_url && (
+                <img src={ad.image_url} alt={ad.title} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+              )}
+              <div className="min-w-0">
+                <h4 className="font-body text-[14px] font-semibold truncate" style={{ color: C.white }}>
+                  {ad.title}
+                </h4>
+                <p className="font-body text-[11.5px]" style={{ color: C.faint }}>
+                  {ad.position} • {ad.clicks || 0} clicks • 
+                  {ad.video_url ? ' 🎬 Video Uploaded' : 
+                   ad.link_url && (ad.link_url.includes('youtube') || ad.link_url.includes('vimeo')) ? ' 🎬 Video' : ' 🖼️ Image'}
+                  • {ad.active ? '✅ Active' : '❌ Inactive'}
+                </p>
+                {ad.video_url && (
+                  <p className="font-body text-[10px] truncate" style={{ color: C.faint }}>📹 {ad.video_url}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => handleEdit(ad)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                style={{ color: C.dim }}
+              >
+                <Edit size={15} />
+              </button>
+              <button
+                onClick={() => handleDelete(ad.id)}
+                className="p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                style={{ color: '#ef4444' }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {ads.length === 0 && !loading && (
+        <div className="text-center py-12" style={{ color: C.faint }}>
+          <p className="font-body text-[14px]">No ads yet. Click "Add Ad" to create one!</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ===============================================================
+   NAVIGATION
+   =============================================================== */
 const NAV_ITEMS = [
   { id: "overview", label: "Overview", Icon: LayoutDashboard },
   { id: "photos", label: "Gallery Photos", Icon: Image },
   { id: "upload", label: "Upload Content", Icon: UploadCloud },
   { id: "manage", label: "Manage Content", Icon: FolderOpen },
+  { id: "ads", label: "Ads Management", Icon: Plus },
   { id: "payments", label: "Payments", Icon: CreditCard },
   { id: "audience", label: "Audience", Icon: Users },
 ];
 
+/* ===============================================================
+   ROOT ADMIN
+   =============================================================== */
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
   const [booted, setBooted] = useState(false);
@@ -721,6 +1028,7 @@ export default function Admin() {
                 {tab === "photos" && <Photos />}
                 {tab === "upload" && <UploadContent onUpload={handleUpload} />}
                 {tab === "manage" && <ManageContent allContent={allContent} engagement={engagement} onDelete={handleDelete} />}
+                {tab === "ads" && <AdsManagement />}
                 {tab === "payments" && <Payments />}
                 {tab === "audience" && <Audience />}
               </motion.div>
