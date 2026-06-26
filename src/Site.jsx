@@ -1073,7 +1073,7 @@ const Homepage = () => {
 
       {/* 🔥 ADS SECTION - MORE SPACE ABOVE */}
       <div className="max-w-6xl mx-auto px-6 md:px-10 pt-16 pb-8">
-        <Ads position="home" limit={3} />
+        <Ads position="home" limit={7} />
       </div>
 
       {/* Divider */}
