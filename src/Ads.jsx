@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Maximize2 } from 'lucide-react';
+import { Maximize2, Play, X } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 import { getThemeColors } from './themeColors';
 import { sb } from './Site';
@@ -12,6 +12,7 @@ const Ads = ({ position = "home", limit = 3 }) => {
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
 
+  // Check if URL is a video
   const isVideo = (url) => {
     if (!url) return false;
     const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
@@ -20,6 +21,7 @@ const Ads = ({ position = "home", limit = 3 }) => {
            videoPlatforms.some(platform => url.includes(platform));
   };
 
+  // Get embed URL for videos
   const getEmbedUrl = (url) => {
     if (!url) return '';
     if (url.includes('youtube.com/watch?v=')) {
@@ -95,12 +97,13 @@ const Ads = ({ position = "home", limit = 3 }) => {
 
   return (
     <>
-      {/* 🔥 BOX GRID - Like your gallery */}
+      {/* Ads Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {ads.map((ad, index) => {
           const videoUrl = ad.video_url || ad.link_url;
           const isVideoAd = videoUrl && isVideo(videoUrl);
           const embedUrl = isVideoAd ? getEmbedUrl(videoUrl) : null;
+          const isVideoFile = embedUrl && embedUrl.match(/\.(mp4|webm|mov)$/i);
           
           return (
             <motion.div
@@ -117,27 +120,57 @@ const Ads = ({ position = "home", limit = 3 }) => {
               onClick={() => handleAdClick(ad)}
             >
               <div className="w-full h-full flex flex-col">
-                {/* Image/Video - takes most of the space */}
+                {/* Video or Image */}
                 <div className="flex-1 overflow-hidden relative">
+                  {isVideoAd && (
+                    <div className="w-full h-full relative">
+                      {isVideoFile ? (
+                        <video
+                          src={embedUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                          loop
+                          ref={(el) => {
+                            if (el) {
+                              el.addEventListener('mouseenter', () => {
+                                try { el.play(); } catch {}
+                              });
+                              el.addEventListener('mouseleave', () => {
+                                try { el.pause(); } catch {}
+                              });
+                              setTimeout(() => {
+                                try { el.play(); } catch {}
+                              }, 100);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <iframe
+                          src={embedUrl + (embedUrl.includes('youtube') ? '?autoplay=1&mute=1&loop=1&playlist=' + embedUrl.split('v=')[1]?.split('&')[0] : '')}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title={ad.title}
+                        />
+                      )}
+                      
+                      {/* Play overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+                          <Play className="w-8 h-8 text-white" fill="white" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {ad.image_url && !isVideoAd && (
                     <img 
                       src={ad.image_url} 
                       alt={ad.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                  )}
-                  
-                  {isVideoAd && (
-                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.3)' }}>
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <polygon points="5,3 19,12 5,21" />
-                        </svg>
-                      </div>
-                      <span className="absolute bottom-2 right-2 text-xs px-2 py-1 rounded" style={{ background: 'rgba(0,0,0,0.6)', color: 'white' }}>
-                        ▶ Video
-                      </span>
-                    </div>
                   )}
 
                   {/* Ad badge */}
@@ -146,14 +179,14 @@ const Ads = ({ position = "home", limit = 3 }) => {
                   </div>
                 </div>
 
-                {/* Title - at the bottom */}
+                {/* Title */}
                 <div className="p-3">
                   <h4 className="font-body text-[13px] font-semibold truncate" style={{ color: colors.textPrimary }}>
                     {ad.title}
                   </h4>
                   <p className="font-body text-[10px] mt-0.5 flex items-center gap-1" style={{ color: colors.textMuted }}>
                     <Maximize2 size={12} />
-                    Tap to view
+                    {isVideoAd ? '▶️ Tap to watch' : 'Tap to view'}
                   </p>
                 </div>
               </div>
@@ -162,7 +195,7 @@ const Ads = ({ position = "home", limit = 3 }) => {
         })}
       </div>
 
-      {/* 🔥 FULLSCREEN MODAL */}
+      {/* Fullscreen Modal */}
       {selectedAd && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -185,22 +218,11 @@ const Ads = ({ position = "home", limit = 3 }) => {
               className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(0,0,0,0.6)', color: 'white' }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X size={20} />
             </button>
 
             <div className="p-6">
-              {selectedAd.image_url && (
-                <div className="w-full rounded-xl overflow-hidden mb-4">
-                  <img 
-                    src={selectedAd.image_url} 
-                    alt={selectedAd.title}
-                    className="w-full h-auto max-h-[60vh] object-contain"
-                  />
-                </div>
-              )}
-
+              {/* Video in fullscreen */}
               {selectedAd.video_url && isVideo(selectedAd.video_url) && (
                 <div className="w-full rounded-xl overflow-hidden mb-4">
                   {selectedAd.video_url.match(/\.(mp4|webm|mov)$/i) ? (
@@ -221,6 +243,16 @@ const Ads = ({ position = "home", limit = 3 }) => {
                       title={selectedAd.title}
                     />
                   )}
+                </div>
+              )}
+
+              {selectedAd.image_url && !isVideo(selectedAd.video_url) && (
+                <div className="w-full rounded-xl overflow-hidden mb-4">
+                  <img 
+                    src={selectedAd.image_url} 
+                    alt={selectedAd.title}
+                    className="w-full h-auto max-h-[60vh] object-contain"
+                  />
                 </div>
               )}
 
