@@ -1055,6 +1055,9 @@ const SpaceView = ({ space, user, onBack }) => {
 /* ---------------------------------------------------------------
    HOMEPAGE - THEMED
 --------------------------------------------------------------- */
+/* ---------------------------------------------------------------
+   HOMEPAGE - THEMED WITH SOCIAL LINKS (TikTok replaces Facebook)
+--------------------------------------------------------------- */
 const Homepage = () => {
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
@@ -1106,18 +1109,72 @@ const Homepage = () => {
 
       <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
       
+      {/* 🔥 UPDATED FOOTER WITH TIKTOK INSTEAD OF FACEBOOK */}
       <footer className="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
-        <p className="font-body text-[12px]" style={{ color: colors.textMuted }}>© {new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.</p>
+        <p className="font-body text-[12px]" style={{ color: colors.textMuted }}>
+          © {new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.
+        </p>
         <div className="flex items-center gap-3">
-          {[Instagram, Youtube, Facebook, Twitter].map((Icon, i) => (
-            <a key={i} href="#" className="w-9 h-9 rounded-full flex items-center justify-center" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}><Icon size={15} /></a>
-          ))}
+          {/* Instagram */}
+          <a 
+            href="https://www.instagram.com/whispers.with.oluwasogo?igsh=ZnVoNGlyaHh0djA=" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10" 
+            style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
+            aria-label="Instagram"
+          >
+            <Instagram size={15} />
+          </a>
+          
+          {/* YouTube */}
+          <a 
+            href="https://youtube.com/@yourchannel" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10" 
+            style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
+            aria-label="YouTube"
+          >
+            <Youtube size={15} />
+          </a>
+          
+          {/* TikTok (replaces Facebook) */}
+          <a 
+            href="https://www.tiktok.com/@whispers.with.oluwasogo?_r=1&_t=ZS-97WEBNcejYN" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10" 
+            style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
+            aria-label="TikTok"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+            </svg>
+          </a>
+          
+          {/* Twitter/X */}
+          <a 
+            href="https://x.com/sogospeaks" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10" 
+            style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
+            aria-label="Twitter"
+          >
+            <Twitter size={15} />
+          </a>
         </div>
       </footer>
     </div>
   );
 };
-
 /* ---------------------------------------------------------------
    ROOT - SITE (WITH STRONG AUTO-LOGOUT)
 --------------------------------------------------------------- */
