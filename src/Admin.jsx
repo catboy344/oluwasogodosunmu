@@ -62,8 +62,13 @@ async function uploadToCloudinary(file, folder = "gallery") {
   formData.append("file", file);
   formData.append("upload_preset", CLOUDINARY_PRESET);
   formData.append("folder", folder);
+  
+  // Detect if it's a video
+  const isVideo = file.type.startsWith('video/');
+  const uploadType = isVideo ? 'video' : 'auto';
+  
   const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`,
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${uploadType}/upload`,
     { method: "POST", body: formData }
   );
   if (!res.ok) throw new Error("Upload failed");
@@ -84,6 +89,7 @@ const SPACES = [
 const DEFAULT_CONTENT = [];
 const DEMO_PAYMENTS = [];
 const DEMO_AUDIENCE = [];
+
 /* ---------------------------------------------------------------
    STORAGE
 --------------------------------------------------------------- */
@@ -586,36 +592,23 @@ const Audience = () => (
 );
 
 /* ===============================================================
-   🔥 ADS MANAGEMENT WITH IMAGE UPLOAD
+   🔥 ADS MANAGEMENT - FIXED
    =============================================================== */
-const handleVideoUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  setUploadingVideo(true);
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", CLOUDINARY_PRESET);
-    formData.append("folder", "ads_videos");
-    formData.append("resource_type", "video");
-    
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`,
-      { method: "POST", body: formData }
-    );
-    
-    if (!res.ok) throw new Error("Upload failed");
-    const data = await res.json();
-    setFormData({...formData, video_url: data.secure_url});
-    alert("✅ Video uploaded successfully!");
-  } catch (err) {
-    alert("❌ Upload failed: " + err.message);
-  } finally {
-    setUploadingVideo(false);
-    e.target.value = "";
-  }
-};  // ← Make sure there's only ONE closing } here
+const AdsManagement = () => {
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [editingAd, setEditingAd] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    image_url: '',
+    link_url: '',
+    video_url: '',
+    position: 'home',
+    active: true
+  });
 
   // Fetch ads
   const fetchAds = async () => {
@@ -639,7 +632,7 @@ const handleVideoUpload = async (e) => {
     fetchAds();
   }, []);
 
-  // 🔥 NEW: Handle image upload (just like Gallery Photos)
+  // Handle image upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
