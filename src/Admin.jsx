@@ -588,21 +588,34 @@ const Audience = () => (
 /* ===============================================================
    🔥 ADS MANAGEMENT WITH IMAGE UPLOAD
    =============================================================== */
-const AdsManagement = () => {
-  const [ads, setAds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [editingAd, setEditingAd] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    image_url: '',
-    link_url: '',
-    video_url: '',
-    position: 'home',
-    active: true
-  });
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_PRESET);
+      formData.append("folder", "ads_videos");
+      formData.append("resource_type", "video"); // 🔥 ADD THIS
+      
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`,
+        { method: "POST", body: formData }
+      );
+      
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFormData({...formData, video_url: data.secure_url});
+      alert("✅ Video uploaded successfully!");
+    } catch (err) {
+      alert("❌ Upload failed: " + err.message);
+    } finally {
+      setUploadingVideo(false);
+      e.target.value = "";
+    }
+  };
 
   // Fetch ads
   const fetchAds = async () => {
