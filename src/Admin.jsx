@@ -588,34 +588,34 @@ const Audience = () => (
 /* ===============================================================
    🔥 ADS MANAGEMENT WITH IMAGE UPLOAD
    =============================================================== */
-  const handleVideoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleVideoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploadingVideo(true);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_PRESET);
+    formData.append("folder", "ads_videos");
+    formData.append("resource_type", "video");
     
-    setUploadingVideo(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_PRESET);
-      formData.append("folder", "ads_videos");
-      formData.append("resource_type", "video"); // 🔥 ADD THIS
-      
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`,
-        { method: "POST", body: formData }
-      );
-      
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setFormData({...formData, video_url: data.secure_url});
-      alert("✅ Video uploaded successfully!");
-    } catch (err) {
-      alert("❌ Upload failed: " + err.message);
-    } finally {
-      setUploadingVideo(false);
-      e.target.value = "";
-    }
-  };
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`,
+      { method: "POST", body: formData }
+    );
+    
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    setFormData({...formData, video_url: data.secure_url});
+    alert("✅ Video uploaded successfully!");
+  } catch (err) {
+    alert("❌ Upload failed: " + err.message);
+  } finally {
+    setUploadingVideo(false);
+    e.target.value = "";
+  }
+};  // ← Make sure there's only ONE closing } here
 
   // Fetch ads
   const fetchAds = async () => {
