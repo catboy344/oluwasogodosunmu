@@ -1053,9 +1053,6 @@ const SpaceView = ({ space, user, onBack }) => {
 };
 
 /* ---------------------------------------------------------------
-   HOMEPAGE - THEMED
---------------------------------------------------------------- */
-/* ---------------------------------------------------------------
    HOMEPAGE - THEMED WITH SOCIAL LINKS (TikTok replaces Facebook)
 --------------------------------------------------------------- */
 const Homepage = () => {
@@ -1129,7 +1126,7 @@ const Homepage = () => {
           
           {/* YouTube */}
           <a 
-            href="https://youtube.com/@yourchannel" 
+            href="https://youtube.com/@shugzeygold?si=0bsnDVrBbROsPHyL" 
             target="_blank" 
             rel="noopener noreferrer"
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-white/10" 
