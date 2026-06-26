@@ -1173,23 +1173,23 @@ const Homepage = () => {
   );
 };
 /* ---------------------------------------------------------------
-   ROOT - SITE (WITH STRONG AUTO-LOGOUT)
+   ROOT - SITE (GUARANTEED AUTO-LOGOUT)
 --------------------------------------------------------------- */
 export default function Site() {
-  // ========== 1. FIRST - STATE DECLARATIONS ==========
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingSpace, setPendingSpace] = useState(null);
   const [isChecking, setIsChecking] = useState(true);
 
-  // ========== 2. SECOND - onAuthStateChange (AFTER state) ==========
+  // 🔥 REAL-TIME AUTH STATE LISTENER
   useEffect(() => {
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       
       if (event === 'SIGNED_OUT' || !session) {
-        sessionStorage.removeItem("user-profile");
+        localStorage.removeItem("user-profile");
+        localStorage.removeItem("session-start");
         setUser(null);
         setView("home");
         console.log("🔄 Auto-logged out: Auth state changed");
@@ -1200,7 +1200,8 @@ export default function Site() {
           email: user.email,
           id: user.id
         };
-        sessionStorage.setItem("user-profile", JSON.stringify(profile));
+        localStorage.setItem("user-profile", JSON.stringify(profile));
+        localStorage.setItem("session-start", Date.now().toString());
         setUser(profile);
       }
     });
@@ -1210,11 +1211,36 @@ export default function Site() {
     };
   }, []);
 
-  // ========== 3. THEN - All other useEffects ==========
-  // 🔥 FIX 1: Check session on load - WITH FORCE LOGOUT
+  // 🔥 CHECK SESSION ON LOAD - WITH EXPIRY
   useEffect(() => {
     const checkSession = async () => {
       setIsChecking(true);
+      
+      // Check if session exists in localStorage
+      const storedUser = localStorage.getItem("user-profile");
+      const sessionStart = localStorage.getItem("session-start");
+      
+      // 🔥 SESSION EXPIRY: 30 MINUTES
+      const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
+      const now = Date.now();
+      
+      if (storedUser && sessionStart) {
+        const elapsed = now - parseInt(sessionStart);
+        
+        // If session is older than 30 minutes, force logout
+        if (elapsed > SESSION_DURATION) {
+          localStorage.removeItem("user-profile");
+          localStorage.removeItem("session-start");
+          await sb.auth.signOut();
+          setUser(null);
+          setView("home");
+          setIsChecking(false);
+          console.log("🔄 Auto-logged out: Session expired (30 min)");
+          return;
+        }
+      }
+      
+      // Verify with Supabase
       const { data: { session } } = await sb.auth.getSession();
       
       if (session) {
@@ -1225,7 +1251,8 @@ export default function Site() {
           id: user.id
         };
         
-        sessionStorage.setItem("user-profile", JSON.stringify(profile));
+        localStorage.setItem("user-profile", JSON.stringify(profile));
+        localStorage.setItem("session-start", now.toString());
         setUser(profile);
         
         if (pendingSpace) {
@@ -1234,8 +1261,8 @@ export default function Site() {
           window.scrollTo(0, 0);
         }
       } else {
-        // 🔥 FORCE LOGOUT if no session
-        sessionStorage.removeItem("user-profile");
+        localStorage.removeItem("user-profile");
+        localStorage.removeItem("session-start");
         setUser(null);
         setView("home");
       }
@@ -1245,38 +1272,83 @@ export default function Site() {
     checkSession();
   }, []);
 
-  // 🔥 FIX 2: Check session EVERY 2 SECONDS (Bulletproof!)
+  // 🔥 CHECK SESSION EVERY 5 SECONDS
   useEffect(() => {
     const interval = setInterval(async () => {
       const { data: { session } } = await sb.auth.getSession();
       
+      // Check localStorage expiry too
+      const sessionStart = localStorage.getItem("session-start");
+      const SESSION_DURATION = 30 * 60 * 1000;
+      
+      if (sessionStart) {
+        const elapsed = Date.now() - parseInt(sessionStart);
+        if (elapsed > SESSION_DURATION) {
+          // Session expired by time
+          localStorage.removeItem("user-profile");
+          localStorage.removeItem("session-start");
+          await sb.auth.signOut();
+          setUser(null);
+          setView("home");
+          console.log("🔄 Auto-logged out: Session expired (time)");
+          return;
+        }
+      }
+      
       if (!session && user) {
-        // Session expired - FORCE LOGOUT immediately
-        sessionStorage.removeItem("user-profile");
+        localStorage.removeItem("user-profile");
+        localStorage.removeItem("session-start");
         setUser(null);
         setView("home");
-        console.log("🔄 Auto-logged out: Session expired (interval check)");
+        console.log("🔄 Auto-logged out: Session expired (Supabase)");
       }
-    }, 2000); // Check every 2 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [user]);
 
-  // 🔥 FIX 3: Check session when tab becomes visible again
+  // 🔥 DETECT TAB/BROWSER CLOSE - save timestamp to detect on reload
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Save a timestamp when user leaves
+      localStorage.setItem("last-activity", Date.now().toString());
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  // 🔥 CHECK IF USER RETURNED AFTER LONG ABSENCE
+  useEffect(() => {
+    const checkReturn = () => {
+      const lastActivity = localStorage.getItem("last-activity");
+      if (lastActivity) {
+        const elapsed = Date.now() - parseInt(lastActivity);
+        // If user was away for more than 5 minutes, check session
+        if (elapsed > 5 * 60 * 1000) {
+          const checkSession = async () => {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) {
+              localStorage.removeItem("user-profile");
+              localStorage.removeItem("session-start");
+              setUser(null);
+              setView("home");
+              console.log("🔄 Auto-logged out: Returned after long absence");
+            }
+          };
+          checkSession();
+        }
+        localStorage.removeItem("last-activity");
+      }
+    };
+    
+    // Check when page becomes visible again
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Tab became visible - check session
-        const checkOnReturn = async () => {
-          const { data: { session } } = await sb.auth.getSession();
-          if (!session && user) {
-            sessionStorage.removeItem("user-profile");
-            setUser(null);
-            setView("home");
-            console.log("🔄 Auto-logged out: Tab returned");
-          }
-        };
-        checkOnReturn();
+        checkReturn();
       }
     };
     
@@ -1285,28 +1357,8 @@ export default function Site() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user]);
-
-  // 🔥 FIX 4: Multiple events for tab/browser close
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.removeItem("user-profile");
-    };
-    
-    const handlePageHide = () => {
-      sessionStorage.removeItem("user-profile");
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-    };
   }, []);
 
-  // ========== 4. THEN - Functions ==========
   const handleSelectSpace = useCallback((id) => {
     if (user) { 
       setView(id); 
@@ -1319,7 +1371,8 @@ export default function Site() {
 
   const handleAuth = (profile) => {
     setUser(profile); 
-    sessionStorage.setItem("user-profile", JSON.stringify(profile)); 
+    localStorage.setItem("user-profile", JSON.stringify(profile)); 
+    localStorage.setItem("session-start", Date.now().toString());
     setAuthOpen(false);
     if (pendingSpace) { 
       setView(pendingSpace); 
@@ -1330,15 +1383,15 @@ export default function Site() {
 
   const logout = async () => { 
     await sb.auth.signOut();
-    sessionStorage.clear(); // 🔥 Clear ALL session data
+    localStorage.removeItem("user-profile");
+    localStorage.removeItem("session-start");
+    localStorage.removeItem("last-activity");
     setUser(null); 
     setView("home"); 
   };
   
   const activeSpace = SPACES.find(s => s.id === view);
 
-  // ========== 5. THEN - Return ==========
-  // Show nothing while checking
   if (isChecking) {
     return (
       <div style={{ 
