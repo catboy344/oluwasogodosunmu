@@ -1054,7 +1054,7 @@ const SpaceView = ({ space, user, onBack }) => {
 };
 
 /* ---------------------------------------------------------------
-   HOMEPAGE - THEMED WITH ADS SECTION
+   HOMEPAGE - THEMED WITH ADS SECTION (MORE SPACE ABOVE)
 --------------------------------------------------------------- */
 const Homepage = () => {
   const { isDark } = useTheme();
@@ -1062,6 +1062,7 @@ const Homepage = () => {
   
   return (
     <div style={{ background: colors.background, minHeight: "100vh", transition: "all 0.3s ease" }}>
+      {/* Hero Section */}
       <div className="relative min-h-screen flex flex-col justify-center overflow-hidden">
         {[
           { color: "#7C3AED", top: "10%", left: "60%", size: 500 },
@@ -1084,13 +1085,18 @@ const Homepage = () => {
         </div>
       </div>
 
-      {/* 🔥 ADS SECTION - BETWEEN ABOUT AND FEATURED */}
-      <div className="max-w-6xl mx-auto px-6 md:px-10 pb-12">
+      {/* Divider */}
+      <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
+
+      {/* 🔥 ADS SECTION - MORE SPACE ABOVE */}
+      <div className="max-w-6xl mx-auto px-6 md:px-10 pt-16 pb-8">
         <Ads position="home" limit={3} />
       </div>
 
+      {/* Divider */}
       <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
 
+      {/* Featured Section */}
       <div className="max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-20">
         <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="font-body text-[10.5px] tracking-[0.35em] uppercase mb-8 text-center" style={{ color: colors.textMuted }}>
           Featured
@@ -1110,9 +1116,10 @@ const Homepage = () => {
         </div>
       </div>
 
+      {/* Divider */}
       <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${colors.borderColor}, transparent)` }} />
       
-      {/* FOOTER WITH SOCIAL LINKS */}
+      {/* Footer */}
       <footer className="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
         <p className="font-body text-[12px]" style={{ color: colors.textMuted }}>
           © {new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.
