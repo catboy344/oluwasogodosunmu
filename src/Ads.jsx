@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Maximize2, Play, X } from 'lucide-react';
+import { Maximize2, Play, X, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 import { getThemeColors } from './themeColors';
 import { sb } from './Site';
@@ -11,10 +11,11 @@ const Ads = ({ position = "home", limit = 3 }) => {
   const [selectedAd, setSelectedAd] = useState(null);
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
+  const videoRefs = useRef({});
 
   const isVideo = (url) => {
     if (!url) return false;
-    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.3gp'];
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
     const videoPlatforms = ['youtube.com', 'youtu.be', 'vimeo.com'];
     return videoExtensions.some(ext => url.toLowerCase().includes(ext)) ||
            videoPlatforms.some(platform => url.includes(platform));
@@ -56,6 +57,15 @@ const Ads = ({ position = "home", limit = 3 }) => {
 
         if (data) {
           setAds(data);
+          // Auto-play videos after render
+          setTimeout(() => {
+            data.forEach(ad => {
+              const videoEl = videoRefs.current[ad.id];
+              if (videoEl && isVideo(ad.video_url)) {
+                try { videoEl.play(); } catch {}
+              }
+            });
+          }, 500);
         }
       } catch (err) {
         console.error("Failed to load ads:", err);
@@ -97,10 +107,8 @@ const Ads = ({ position = "home", limit = 3 }) => {
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {ads.map((ad, index) => {
-          // 🔥 PRIORITIZE VIDEO OVER IMAGE
           const hasVideo = ad.video_url && isVideo(ad.video_url);
-          const videoUrl = hasVideo ? ad.video_url : (ad.link_url && isVideo(ad.link_url) ? ad.link_url : null);
-          const isVideoAd = !!videoUrl;
+          const videoUrl = hasVideo ? ad.video_url : null;
           
           return (
             <motion.div
@@ -118,52 +126,40 @@ const Ads = ({ position = "home", limit = 3 }) => {
             >
               <div className="w-full h-full flex flex-col">
                 <div className="flex-1 overflow-hidden relative">
-                  {/* 🔥 VIDEO - PRIORITIZED */}
-                  {isVideoAd && videoUrl && (
+                  {/* 🔥 VIDEO - WITH DIRECT MP4 SUPPORT */}
+                  {hasVideo && videoUrl && (
                     <div className="w-full h-full relative">
-                      {videoUrl.match(/\.(mp4|webm|mov|avi|mkv)$/i) ? (
-                        <video
-                          src={videoUrl}
-                          className="w-full h-full object-cover"
-                          muted
-                          playsInline
-                          loop
-                          ref={(el) => {
-                            if (el) {
-                              el.addEventListener('mouseenter', () => {
-                                try { el.play(); } catch {}
-                              });
-                              el.addEventListener('mouseleave', () => {
-                                try { el.pause(); } catch {}
-                              });
-                              setTimeout(() => {
-                                try { el.play(); } catch {}
-                              }, 500);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <iframe
-                          src={getEmbedUrl(videoUrl) + (videoUrl.includes('youtube') ? '?autoplay=1&mute=1&loop=1' : '')}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title={ad.title}
-                        />
-                      )}
+                      <video
+                        ref={el => { if (el) videoRefs.current[ad.id] = el; }}
+                        src={videoUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        loop
+                        preload="auto"
+                        onError={(e) => {
+                          console.log('Video error for:', ad.title);
+                          console.log('URL:', videoUrl);
+                          console.log('Error:', e);
+                        }}
+                      />
                       
-                      {/* Play overlay */}
+                      {/* Play button overlay */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                          <Play className="w-8 h-8 text-white" fill="white" />
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+                          <Play className="w-8 h-8 text-white ml-1" fill="white" />
                         </div>
+                      </div>
+                      
+                      {/* Video indicator */}
+                      <div className="absolute bottom-2 left-2 text-[8px] font-body px-2 py-0.5 rounded" style={{ background: 'rgba(255,0,0,0.8)', color: 'white' }}>
+                        ▶ VIDEO
                       </div>
                     </div>
                   )}
 
-                  {/* 🔥 IMAGE - ONLY IF NO VIDEO */}
-                  {!isVideoAd && ad.image_url && (
+                  {/* IMAGE - ONLY IF NO VIDEO */}
+                  {!hasVideo && ad.image_url && (
                     <img 
                       src={ad.image_url} 
                       alt={ad.title}
@@ -175,13 +171,6 @@ const Ads = ({ position = "home", limit = 3 }) => {
                   <div className="absolute top-2 right-2 text-[10px] font-body px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.7)' }}>
                     Ad
                   </div>
-                  
-                  {/* 🔥 Video indicator */}
-                  {isVideoAd && (
-                    <div className="absolute bottom-2 left-2 text-[8px] font-body px-2 py-0.5 rounded" style={{ background: 'rgba(255,0,0,0.7)', color: 'white' }}>
-                      ▶ VIDEO
-                    </div>
-                  )}
                 </div>
 
                 <div className="p-3">
@@ -190,7 +179,7 @@ const Ads = ({ position = "home", limit = 3 }) => {
                   </h4>
                   <p className="font-body text-[10px] mt-0.5 flex items-center gap-1" style={{ color: colors.textMuted }}>
                     <Maximize2 size={12} />
-                    {isVideoAd ? '▶️ Tap to watch' : 'Tap to view'}
+                    {hasVideo ? '▶️ Tap to watch' : 'Tap to view'}
                   </p>
                 </div>
               </div>
@@ -226,27 +215,17 @@ const Ads = ({ position = "home", limit = 3 }) => {
             </button>
 
             <div className="p-6">
-              {/* 🔥 VIDEO IN FULLSCREEN */}
+              {/* Video in fullscreen */}
               {selectedAd.video_url && isVideo(selectedAd.video_url) && (
-                <div className="w-full rounded-xl overflow-hidden mb-4">
-                  {selectedAd.video_url.match(/\.(mp4|webm|mov)$/i) ? (
-                    <video
-                      src={selectedAd.video_url}
-                      className="w-full max-h-[60vh]"
-                      controls
-                      playsInline
-                      autoPlay
-                    />
-                  ) : (
-                    <iframe
-                      src={getEmbedUrl(selectedAd.video_url)}
-                      className="w-full aspect-video"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={selectedAd.title}
-                    />
-                  )}
+                <div className="w-full rounded-xl overflow-hidden mb-4 bg-black">
+                  <video
+                    src={selectedAd.video_url}
+                    className="w-full max-h-[60vh]"
+                    controls
+                    playsInline
+                    autoPlay
+                    controlsList="nodownload"
+                  />
                 </div>
               )}
 
