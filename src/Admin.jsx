@@ -565,7 +565,7 @@ const UploadContent = ({ onUpload }) => {
   );
 };
 /* ---------------------------------------------------------------
-   MANAGE CONTENT - FETCHES FROM SUPABASE
+   MANAGE CONTENT - FIXED
 --------------------------------------------------------------- */
 const ManageContent = () => {
   const [content, setContent] = useState([]);
@@ -628,7 +628,9 @@ const ManageContent = () => {
       </p>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.violet : C.border}`, color: filter === "all" ? C.violet : C.faint, background: filter === "all" ? `${C.violet}14` : "transparent" }}>All ({content.length})</button>
+        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.violet : C.border}`, color: filter === "all" ? C.violet : C.faint, background: filter === "all" ? `${C.violet}14` : "transparent" }}>
+          All ({content.length})
+        </button>
         {SPACES.map(s => {
           const count = content.filter(c => c.space_id === s.id).length;
           return (
@@ -647,14 +649,17 @@ const ManageContent = () => {
         <div className="space-y-1">
           {filtered.map((item, i) => {
             const space = SPACES.find(s => s.id === item.space_id);
+            const IconComponent = space?.Icon || FolderOpen;
+            const accentColor = space?.accent || C.violet;
+            
             return (
               <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                 className="flex items-center justify-between py-4 px-4 rounded-xl"
                 style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${space?.accent || C.violet}22` }}>
-                    <space?.Icon size={13} color={space?.accent || C.violet} />
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${accentColor}22` }}>
+                    <IconComponent size={13} color={accentColor} />
                   </div>
                   <div className="min-w-0">
                     <p className="font-body text-[13.5px] truncate" style={{ color: C.white }}>{item.title}</p>
