@@ -436,7 +436,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
   );
 };
 /* ---------------------------------------------------------------
-   AUTH MODAL - THEMED WITH BOLD ANIMATED BACKGROUND
+   AUTH MODAL - THEMED WITH BOLD ANIMATED BACKGROUND (DODGE REMOVED)
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const { isDark } = useTheme();
@@ -448,8 +448,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [dodgeCount, setDodgeCount] = useState(0);
-  const [btnPos, setBtnPos] = useState({ x: 0, y: 0 });
   const [shake, setShake] = useState(false);
 
   // Animated tiles data - MORE WORDS, BOLDER
@@ -469,17 +467,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     "rgba(236,72,153,0.15)", "rgba(52,211,153,0.15)", "rgba(251,146,60,0.15)"
   ];
 
-  const dodge = () => {
-    const directions = [
-      { x: 120, y: -30 }, { x: -110, y: 20 }, { x: 80, y: 40 },
-      { x: -90, y: -50 }, { x: 100, y: 50 }, { x: -120, y: 10 },
-    ];
-    const pick = directions[Math.floor(Math.random() * directions.length)];
-    setBtnPos(pick);
-    setShake(true);
-    setTimeout(() => { setBtnPos({ x: 0, y: 0 }); setShake(false); }, 500);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -488,12 +475,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     if (!email || !password || (mode === "signup" && !name)) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
-      return;
-    }
-
-    if (dodgeCount < 2) {
-      setDodgeCount(c => c + 1);
-      dodge();
       return;
     }
 
@@ -513,8 +494,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             setError("This email is already registered. Please log in instead.");
             setTimeout(() => {
               setMode("login");
-              setDodgeCount(0);
-              setBtnPos({ x: 0, y: 0 });
               setError("");
             }, 3000);
           } else {
@@ -590,8 +569,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     }
   };
 
-  const dodgeMsgs = ["Hmm, not yet... 😏", "Almost! Try again 😅", "Okay okay, you got me 🎉"];
-
   return (
     <motion.div 
       className="fixed inset-0 z-50 flex items-center justify-center px-5 overflow-hidden" 
@@ -603,7 +580,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
     >
-      {/* 🎨 BOLD ANIMATED TILES BACKGROUND */}
+      {/* Animated tiles background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {animatedTiles.map((tile, i) => {
           const row = Math.floor(i / 6);
@@ -659,7 +636,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           );
         })}
         
-        {/* 🌟 GLOWING PARTICLES - MORE OBVIOUS */}
+        {/* Glowing particles */}
         {[...Array(20)].map((_, i) => {
           const size = 100 + Math.random() * 200;
           const colors = isDark 
@@ -693,7 +670,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           );
         })}
         
-        {/* ✨ FLOATING DOTS */}
+        {/* Floating dots */}
         {[...Array(30)].map((_, i) => (
           <motion.div
             key={`dot-${i}`}
@@ -741,8 +718,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
             setMode(defaultMode); 
             setError(""); 
             setSuccess(false);
-            setDodgeCount(0);
-            setBtnPos({ x: 0, y: 0 });
           }} 
           className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10" 
           style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
@@ -754,7 +729,7 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
           {mode === "signup" ? "Create account" : "Welcome back"}
         </h3>
         <p className="font-body text-[13px] mb-7" style={{ color: colors.textSecondary }}>
-          {dodgeCount === 0 ? (mode === "signup" ? "Join my world" : "Log back in") : dodgeMsgs[dodgeCount - 1]}
+          {mode === "signup" ? "Join my world" : "Log back in"}
         </p>
         
         {error && (
@@ -778,8 +753,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                 type="button"
                 onClick={() => { 
                   setMode("login"); 
-                  setDodgeCount(0); 
-                  setBtnPos({ x: 0, y: 0 }); 
                   setError("");
                 }}
                 style={{ color: "#818CF8", fontSize: "13px", marginTop: "8px" }}
@@ -850,28 +823,19 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                 type="submit"
                 disabled={loading}
                 animate={{ 
-                  x: btnPos.x, 
-                  y: btnPos.y, 
                   rotate: shake ? [0, -4, 4, -4, 4, 0] : 0 
                 }}
                 transition={{ 
-                  x: { type: "spring", stiffness: 260, damping: 18 }, 
-                  y: { type: "spring", stiffness: 260, damping: 18 }, 
                   rotate: { duration: 0.4 } 
                 }}
                 className="absolute inset-0 w-full rounded-2xl font-body text-[14px] font-semibold transition-opacity"
                 style={{ 
-                  background: dodgeCount >= 2 
-                    ? "linear-gradient(135deg,#059669,#10B981)" 
-                    : "linear-gradient(135deg,#7C3AED,#2563EB)", 
+                  background: "linear-gradient(135deg,#7C3AED,#2563EB)", 
                   color: "white",
                   opacity: loading ? 0.7 : 1
                 }}
               >
-                {loading ? "Loading..." : 
-                  dodgeCount === 0 ? (mode === "signup" ? "Sign up" : "Log in") :
-                  dodgeCount === 1 ? "Catch me if you can 😏" :
-                  "Okay fine, come in! 🎉"}
+                {loading ? "Loading..." : (mode === "signup" ? "Sign up" : "Log in")}
               </motion.button>
             </div>
           </form>
@@ -906,8 +870,6 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
                 onClick={() => { 
                   setMode(mode === "signup" ? "login" : "signup"); 
                   setError("");
-                  setDodgeCount(0);
-                  setBtnPos({ x: 0, y: 0 });
                 }} 
                 style={{ color: "#818CF8" }}
                 className="hover:underline transition-all"
