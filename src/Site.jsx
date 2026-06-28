@@ -4,7 +4,7 @@ import {
   ChevronDown, Mic, Video, BookOpen, PenTool, Church, Sparkles, Hand,
   Heart, MessageCircle, X, Instagram, Youtube, Facebook, Twitter, Send,
   Play, Mail, Lock, User, LogOut, ArrowLeft, ChevronLeft, ChevronRight,
-  Quote
+  Quote, FileText  
 } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import { useTheme } from './ThemeContext';
@@ -732,14 +732,15 @@ const Engagement = ({ contentId, user, accent }) => {
 };
 
 /* ---------------------------------------------------------------
-   SPACE VIEW - FETCHES FROM SUPABASE (FIXED)
+   SPACE VIEW - FETCHES FROM SUPABASE (WITH PDF VIEWER + IMAGE CLICK)
 --------------------------------------------------------------- */
 const SpaceView = ({ space, user, onBack }) => {
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedPDF, setSelectedPDF] = useState(null);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -753,14 +754,12 @@ const SpaceView = ({ space, user, onBack }) => {
         
         if (error) {
           console.error("Error fetching content:", error);
-          setError(error.message);
           return;
         }
         
         setContent(data || []);
       } catch (err) {
         console.error("Failed to load content:", err);
-        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -768,6 +767,24 @@ const SpaceView = ({ space, user, onBack }) => {
     
     fetchContent();
   }, [space.id]);
+
+  // Open image fullscreen
+  const openImage = (imageUrl) => {
+    setSelectedImage(imageUrl);
+  };
+
+  const closeImage = () => {
+    setSelectedImage(null);
+  };
+
+  // Open PDF in embedded viewer
+  const openPDF = (fileUrl) => {
+    setSelectedPDF(fileUrl);
+  };
+
+  const closePDF = () => {
+    setSelectedPDF(null);
+  };
 
   if (loading) {
     return (
@@ -783,76 +800,188 @@ const SpaceView = ({ space, user, onBack }) => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: colors.background, transition: "all 0.3s ease" }}>
-      <button
-        onClick={onBack}
-        className="fixed top-5 left-5 z-50 flex items-center gap-2 font-body text-[13px] px-4 py-2.5 rounded-full"
-        style={{ 
-          color: colors.textPrimary, 
-          background: isDark ? "rgba(20,20,28,0.92)" : "rgba(255,255,255,0.92)", 
-          border: `1px solid ${colors.borderLight}`,
-          backdropFilter: "blur(10px)" 
-        }}
-      >
-        <ArrowLeft size={14} /> Back
-      </button>
-      <div className="relative pt-24 pb-16 px-6 md:px-10 text-center" style={{ borderBottom: `1px solid ${colors.borderColor}` }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 0%, ${space.accent}25, transparent)` }} />
-        <div className="relative">
-          <div className="text-4xl mb-3">{space.emoji}</div>
-          <p className="font-body text-[10.5px] tracking-[0.3em] uppercase mb-2" style={{ color: space.accent }}>{space.tag}</p>
-          <h1 className="font-fraunces font-bold text-4xl md:text-[3.2rem] leading-tight mb-4" style={{ color: colors.textPrimary }}>{space.title}</h1>
-          <p className="font-body text-[15px] max-w-md mx-auto" style={{ color: colors.textSecondary }}>{space.desc}</p>
-          <p className="font-body text-[13px] mt-5" style={{ color: colors.textMuted }}>
-            Welcome, <span style={{ color: space.accent }}>{user?.name}</span> — {space.welcome}.
-          </p>
-        </div>
-      </div>
-      <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 space-y-4">
-        {content.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="font-body text-[14px]" style={{ color: colors.textMuted }}>
-              No content yet. Check back soon!
+    <>
+      <div className="min-h-screen" style={{ background: colors.background, transition: "all 0.3s ease" }}>
+        <button
+          onClick={onBack}
+          className="fixed top-5 left-5 z-50 flex items-center gap-2 font-body text-[13px] px-4 py-2.5 rounded-full"
+          style={{ 
+            color: colors.textPrimary, 
+            background: isDark ? "rgba(20,20,28,0.92)" : "rgba(255,255,255,0.92)", 
+            border: `1px solid ${colors.borderLight}`,
+            backdropFilter: "blur(10px)" 
+          }}
+        >
+          <ArrowLeft size={14} /> Back
+        </button>
+
+        <div className="relative pt-24 pb-16 px-6 md:px-10 text-center" style={{ borderBottom: `1px solid ${colors.borderColor}` }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 0%, ${space.accent}25, transparent)` }} />
+          <div className="relative">
+            <div className="text-4xl mb-3">{space.emoji}</div>
+            <p className="font-body text-[10.5px] tracking-[0.3em] uppercase mb-2" style={{ color: space.accent }}>{space.tag}</p>
+            <h1 className="font-fraunces font-bold text-4xl md:text-[3.2rem] leading-tight mb-4" style={{ color: colors.textPrimary }}>{space.title}</h1>
+            <p className="font-body text-[15px] max-w-md mx-auto" style={{ color: colors.textSecondary }}>{space.desc}</p>
+            <p className="font-body text-[13px] mt-5" style={{ color: colors.textMuted }}>
+              Welcome, <span style={{ color: space.accent }}>{user?.name}</span> — {space.welcome}.
             </p>
           </div>
-        ) : (
-          content.map((item, i) => {
-            const IconComponent = space.Icon || FolderOpen;
-            return (
-              <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h3 className="font-fraunces text-xl font-semibold" style={{ color: colors.textPrimary }}>{item.title}</h3>
-                    <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>{item.meta || "New content"}</p>
-                    {item.video_url && (
-                      <div className="mt-3 rounded-xl overflow-hidden">
-                        <video src={item.video_url} className="w-full max-h-[300px]" controls playsInline />
-                      </div>
-                    )}
-                    {item.image_url && !item.video_url && (
-                      <img src={item.image_url} alt={item.title} className="mt-3 rounded-xl w-full max-h-[300px] object-cover" />
-                    )}
-                  </div>
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
-                    <IconComponent size={14} color={space.accent} fill={space.accent} />
-                  </div>
-                </div>
-                {space.type === "book" && item.blurb && (
-                  <div className="mt-4">
-                    <p className="font-body text-[13.5px] leading-relaxed" style={{ color: colors.textSecondary }}>{item.blurb}</p>
-                    <div className="flex flex-wrap gap-3 mt-4">
-                      <button className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold" style={{ background: space.accent, color: "#07080C" }}>Read PDF · {item.price || "Free"}</button>
-                      <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}>Buy hardcover</button>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 space-y-4">
+          {content.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="font-body text-[14px]" style={{ color: colors.textMuted }}>
+                No content yet. Check back soon!
+              </p>
+            </div>
+          ) : (
+            content.map((item, i) => {
+              const IconComponent = space.Icon;
+              return (
+                <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-fraunces text-xl font-semibold" style={{ color: colors.textPrimary }}>{item.title}</h3>
+                      <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>{item.meta || "New content"}</p>
+                      
+                      {/* Video */}
+                      {item.video_url && (
+                        <div className="mt-3 rounded-xl overflow-hidden">
+                          <video src={item.video_url} className="w-full max-h-[300px]" controls playsInline />
+                        </div>
+                      )}
+
+                      {/* 🔥 Image - CLICK TO EXPAND */}
+                      {item.image_url && !item.video_url && (
+                        <div 
+                          className="mt-3 rounded-xl overflow-hidden cursor-pointer"
+                          onClick={() => openImage(item.image_url)}
+                        >
+                          <img 
+                            src={item.image_url} 
+                            alt={item.title} 
+                            className="w-full max-h-[300px] object-cover transition-transform hover:scale-105" 
+                          />
+                          <p className="font-body text-[10px] mt-1 text-center" style={{ color: colors.textMuted }}>
+                            👆 Click to expand
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
+                      <IconComponent size={14} color={space.accent} fill={space.accent} />
                     </div>
                   </div>
-                )}
-                <Engagement contentId={item.id} user={user} accent={space.accent} />
-              </motion.div>
-            );
-          })
-        )}
+
+                  {/* 🔥 Book Section with PDF Online Viewer */}
+                  {space.type === "book" && item.blurb && (
+                    <div className="mt-4">
+                      <p className="font-body text-[13.5px] leading-relaxed" style={{ color: colors.textSecondary }}>{item.blurb}</p>
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        {item.file_url ? (
+                          <button 
+                            onClick={() => openPDF(item.file_url)}
+                            className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold flex items-center gap-2"
+                            style={{ background: space.accent, color: "#07080C" }}
+                          >
+                            <FileText size={16} />
+                            Read Online · {item.price || "Free"}
+                          </button>
+                        ) : (
+                          <button 
+                            disabled
+                            className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold flex items-center gap-2 opacity-50 cursor-not-allowed"
+                            style={{ background: space.accent, color: "#07080C" }}
+                          >
+                            <FileText size={16} />
+                            PDF Not Available
+                          </button>
+                        )}
+                        <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}>
+                          Buy hardcover
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <Engagement contentId={item.id} user={user} accent={space.accent} />
+                </motion.div>
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* 🔥 FULLSCREEN IMAGE MODAL */}
+      {selectedImage && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)' }}
+          onClick={closeImage}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="relative max-w-4xl w-full max-h-[90vh] rounded-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeImage}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,0.6)', color: 'white' }}
+            >
+              <X size={20} />
+            </button>
+            <img 
+              src={selectedImage} 
+              alt="Full view"
+              className="w-full h-auto max-h-[90vh] object-contain rounded-2xl"
+            />
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* 🔥 PDF VIEWER MODAL - EMBEDDED ONLINE READER */}
+      {selectedPDF && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)' }}
+          onClick={closePDF}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="relative w-full max-w-4xl h-[90vh] rounded-2xl overflow-hidden"
+            style={{ background: '#ffffff' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closePDF}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(0,0,0,0.6)', color: 'white' }}
+            >
+              <X size={20} />
+            </button>
+            
+            {/* 🔥 PDF EMBED - Read directly in browser */}
+            <iframe
+              src={`${selectedPDF}#toolbar=1&navpanes=1&scrollbar=1`}
+              className="w-full h-full"
+              style={{ border: 'none' }}
+              title="PDF Reader"
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </>
   );
 };
 /* ---------------------------------------------------------------
