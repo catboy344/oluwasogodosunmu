@@ -436,21 +436,15 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
   );
 };
 /* ---------------------------------------------------------------
-   AUTH MODAL - THEMED WITH BOLD ANIMATED BACKGROUND (FULLY FIXED)
+   AUTH MODAL - GOOGLE ONLY (NO EMAIL SIGNUP)
 --------------------------------------------------------------- */
 const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
-  const [mode, setMode] = useState(defaultMode);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [shake, setShake] = useState(false);
 
-  // Animated tiles data - MORE WORDS, BOLDER
+  // Animated tiles background
   const animatedTiles = [
     "Author", "Poet", "Speaker", "Visionary", "Podcast", "Sermon", "Worship",
     "Prayer", "Faith", "Impact", "Words", "Hope", "Purpose", "Inspire",
@@ -467,113 +461,22 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     "rgba(236,72,153,0.15)", "rgba(52,211,153,0.15)", "rgba(251,146,60,0.15)"
   ];
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setSuccess(false);
-  
-  if (!email || !password || (mode === "signup" && !name)) {
-    setShake(true);
-    setTimeout(() => setShake(false), 400);
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    if (mode === "signup") {
-      console.log("🚀 Attempting signup for:", email);
-      
-      const { data, error } = await sb.auth.signUp({
-        email: email,
-        password: password,
-        options: { 
-          data: { full_name: name },
-          emailRedirectTo: window.location.origin // 🔥 ADD THIS
-        },
-      });
-      
-      console.log("📥 Signup response:", { data, error });
-      console.log("📥 Error details:", JSON.stringify(error, null, 2));
-      
-      if (error) {
-        console.error("❌ Full error:", error);
-        
-        // 🔥 SHOW THE ACTUAL ERROR
-        setError(`❌ ${error.message || "Signup failed"}`);
-        setLoading(false);
-        return;
-      }
-      
-      if (data.user) {
-        if (data.user.confirmed_at === null) {
-          setSuccess(true);
-          setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
-          setLoading(false);
-          setEmail("");
-          setPassword("");
-          setName("");
-          setTimeout(() => {
-            onClose();
-            setError("");
-            setSuccess(false);
-          }, 5000);
-        } else {
-          onAuth({ name: name, email: email, id: data.user.id });
-        }
-        return;
-      }
-    } else {
-      // LOGIN
-      const { data, error } = await sb.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-      
-      if (error) {
-        console.error("Login error:", error);
-        if (error.message.includes("Email not confirmed")) {
-          setError("📧 Please confirm your email first. Check your inbox or spam folder!");
-        } else if (error.message.includes("Invalid login credentials")) {
-          setError("❌ Wrong email or password. Please try again.");
-        } else {
-          setError(`❌ ${error.message || "Login failed"}`);
-        }
-        setLoading(false);
-        return;
-      }
-      
-      if (data.user) {
-        if (data.user.confirmed_at === null) {
-          setError("📧 Please confirm your email first. Check your inbox or spam folder!");
-          setLoading(false);
-          return;
-        }
-        
-        onAuth({ 
-          name: data.user.user_metadata?.full_name || email.split("@")[0],
-          email: email,
-          id: data.user.id
-        });
-      }
-    }
-  } catch (err) {
-    console.error("🔥 CATCH ERROR:", err);
-    setError(`❌ ${err.message || "An error occurred"}`);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  // 🔥 Google-only login
   const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
     try {
       const { data, error } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: { 
+          redirectTo: window.location.origin,
+        },
       });
       if (error) throw error;
+      // User will be redirected to Google, then back
     } catch (err) {
       setError(err.message || "Google login failed. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -588,7 +491,7 @@ const handleSubmit = async (e) => {
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
     >
-      {/* 🎨 BOLD ANIMATED TILES BACKGROUND */}
+      {/* Animated tiles background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {animatedTiles.map((tile, i) => {
           const row = Math.floor(i / 6);
@@ -644,7 +547,7 @@ const handleSubmit = async (e) => {
           );
         })}
         
-        {/* 🌟 GLOWING PARTICLES */}
+        {/* Glowing particles */}
         {[...Array(20)].map((_, i) => {
           const size = 100 + Math.random() * 200;
           const colors = isDark 
@@ -678,7 +581,7 @@ const handleSubmit = async (e) => {
           );
         })}
         
-        {/* ✨ FLOATING DOTS */}
+        {/* Floating dots */}
         {[...Array(30)].map((_, i) => (
           <motion.div
             key={`dot-${i}`}
@@ -704,7 +607,7 @@ const handleSubmit = async (e) => {
         ))}
       </div>
 
-      {/* Auth Modal */}
+      {/* Auth Modal - SIMPLIFIED */}
       <motion.div
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -721,172 +624,57 @@ const handleSubmit = async (e) => {
         }}
       >
         <button 
-          onClick={() => { 
-            onClose(); 
-            setMode(defaultMode); 
-            setError(""); 
-            setSuccess(false);
-          }} 
+          onClick={onClose} 
           className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10" 
           style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
         >
           <X size={15} color={colors.textSecondary} />
         </button>
         
-        <h3 className="font-fraunces text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
-          {mode === "signup" ? "Create account" : "Welcome back"}
-        </h3>
-        <p className="font-body text-[13px] mb-7" style={{ color: colors.textSecondary }}>
-          {mode === "signup" ? "Join my world" : "Log back in"}
-        </p>
+        <div className="text-center">
+          <h3 className="font-fraunces text-2xl font-bold mb-1" style={{ color: colors.textPrimary }}>
+            Welcome Back
+          </h3>
+          <p className="font-body text-[13px] mb-7" style={{ color: colors.textSecondary }}>
+            Sign in with Google to access your account
+          </p>
+        </div>
         
         {error && (
           <div className="mb-4 p-3 rounded-xl" style={{ 
-            background: error.includes("✅") || error.includes("📧") 
-              ? "rgba(16,185,129,0.15)" 
-              : "rgba(239,68,68,0.15)", 
-            border: error.includes("✅") || error.includes("📧")
-              ? "1px solid rgba(16,185,129,0.3)"
-              : "1px solid rgba(239,68,68,0.3)" 
+            background: "rgba(239,68,68,0.15)", 
+            border: "1px solid rgba(239,68,68,0.3)" 
           }}>
-            <p className="font-body text-[13px]" style={{ 
-              color: error.includes("✅") || error.includes("📧") 
-                ? "#10B981" 
-                : "#ef4444" 
-            }}>
-              {error || "Something went wrong"}
-            </p>
-            {error.includes("already registered") && (
-              <button 
-                type="button"
-                onClick={() => { 
-                  setMode("login"); 
-                  setError("");
-                }}
-                style={{ color: "#818CF8", fontSize: "13px", marginTop: "8px" }}
-                className="font-body"
-              >
-                Go to Login →
-              </button>
-            )}
-          </div>
-        )}
-        
-        {success && (
-          <div className="mb-4 p-4 rounded-xl text-center" style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-            <p className="font-body text-[14px]" style={{ color: "#10B981" }}>
-              ✅ Check your email!
-            </p>
-            <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>
-              We sent a confirmation link to <strong style={{ color: colors.textPrimary }}>{email}</strong>
+            <p className="font-body text-[13px]" style={{ color: "#ef4444" }}>
+              {error}
             </p>
           </div>
         )}
         
-        {!success && (
-          <form onSubmit={handleSubmit} className="space-y-3 relative z-10">
-            {mode === "signup" && (
-              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
-                <User size={15} color={colors.textMuted} />
-                <input 
-                  value={name} 
-                  onChange={e => setName(e.target.value)} 
-                  placeholder="Your name" 
-                  className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                  style={{ color: colors.textPrimary }} 
-                  required
-                />
-              </div>
-            )}
-            
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
-              <Mail size={15} color={colors.textMuted} />
-              <input 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                placeholder="Email address" 
-                type="email" 
-                className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                style={{ color: colors.textPrimary }} 
-                required
-              />
-            </div>
-            
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors" style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}` }}>
-              <Lock size={15} color={colors.textMuted} />
-              <input 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                placeholder="Password (min 6 characters)" 
-                type="password" 
-                className="bg-transparent outline-none w-full font-body text-[13.5px]" 
-                style={{ color: colors.textPrimary }} 
-                required
-                minLength={6}
-              />
-            </div>
-            
-            <div className="relative h-14 mt-2">
-              <motion.button
-                type="submit"
-                disabled={loading}
-                animate={{ 
-                  rotate: shake ? [0, -4, 4, -4, 4, 0] : 0 
-                }}
-                transition={{ 
-                  rotate: { duration: 0.4 } 
-                }}
-                className="absolute inset-0 w-full rounded-2xl font-body text-[14px] font-semibold transition-opacity"
-                style={{ 
-                  background: "linear-gradient(135deg,#7C3AED,#2563EB)", 
-                  color: "white",
-                  opacity: loading ? 0.7 : 1
-                }}
-              >
-                {loading ? "Loading..." : (mode === "signup" ? "Sign up" : "Log in")}
-              </motion.button>
-            </div>
-          </form>
-        )}
-        
-        {!success && (
-          <>
-            <div className="flex items-center gap-3 my-5">
-              <div className="h-px flex-1" style={{ background: colors.borderColor }} />
-              <span className="font-body text-[11px]" style={{ color: colors.textMuted }}>or</span>
-              <div className="h-px flex-1" style={{ background: colors.borderColor }} />
-            </div>
-            
-            <button 
-              onClick={handleGoogleLogin}
-              className="w-full py-3.5 rounded-2xl font-body text-[13.5px] flex items-center justify-center gap-2 transition-colors hover:bg-white/10"
-              style={{ background: colors.backgroundInput, border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#4285F4" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Continue with Google
-            </button>
-            
-            <p className="text-center font-body text-[12px] mt-6" style={{ color: colors.textMuted }}>
-              {mode === "signup" ? "Already have an account? " : "New here? "}
-              <button 
-                type="button" 
-                onClick={() => { 
-                  setMode(mode === "signup" ? "login" : "signup"); 
-                  setError("");
-                }} 
-                style={{ color: "#818CF8" }}
-                className="hover:underline transition-all"
-              >
-                {mode === "signup" ? "Log in" : "Sign up"}
-              </button>
-            </p>
-          </>
-        )}
+        {/* Google Button - LARGE & CLEAR */}
+        <button 
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="w-full py-4 rounded-2xl font-body text-[15px] font-semibold flex items-center justify-center gap-3 transition-all hover:scale-[1.02]"
+          style={{ 
+            background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+            border: `1px solid ${colors.borderColor}`,
+            color: colors.textPrimary,
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#4285F4" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          {loading ? "Signing in..." : "Continue with Google"}
+        </button>
+
+        <p className="text-center font-body text-[11px] mt-6" style={{ color: colors.textMuted }}>
+          By continuing, you agree to our Terms of Service
+        </p>
       </motion.div>
     </motion.div>
   );
