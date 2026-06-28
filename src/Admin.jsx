@@ -393,9 +393,8 @@ const Photos = () => {
     </div>
   );
 };
-
 /* ---------------------------------------------------------------
-   UPLOAD CONTENT - SAVES TO SUPABASE
+   UPLOAD CONTENT - WITH GOOGLE DRIVE SUPPORT
 --------------------------------------------------------------- */
 const UploadContent = ({ onUpload }) => {
   const [spaceId, setSpaceId] = useState(SPACES[0].id);
@@ -410,7 +409,80 @@ const UploadContent = ({ onUpload }) => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadMethod, setUploadMethod] = useState("cloudinary"); // "cloudinary" or "googledrive"
+  const [driveFileId, setDriveFileId] = useState("");
+  const [driveLink, setDriveLink] = useState("");
   const space = SPACES.find(s => s.id === spaceId);
+
+  // 🔥 Handle Google Drive upload (opens Google Drive picker or manual entry)
+  const handleDriveUpload = async () => {
+    // Option 1: Manual entry (simplest)
+    const link = prompt("Paste your Google Drive share link:\nExample: https://drive.google.com/file/d/abc123/view");
+    if (link) {
+      // Extract file ID from Google Drive link
+      const match = link.match(/\/d\/([^\/]+)/);
+      if (match) {
+        const fileId = match[1];
+        const directLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        setFileUrl(directLink);
+        setFileName("Google Drive PDF");
+        setDriveFileId(fileId);
+        alert("✅ Google Drive PDF linked successfully!");
+      } else {
+        // If it's already a direct link
+        setFileUrl(link);
+        setFileName("Google Drive PDF");
+        alert("✅ Google Drive PDF linked successfully!");
+      }
+    }
+  };
+
+  // 🔥 Handle Cloudinary file upload
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFileName(file.name);
+    
+    try {
+      // Detect if it's a PDF
+      const isPDF = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+      const resourceType = isPDF ? 'raw' : 'auto';
+      const uploadType = isPDF ? 'raw' : 'upload';
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_PRESET);
+      formData.append("folder", "content");
+      formData.append("resource_type", resourceType);
+      
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${uploadType}/upload`,
+        { method: "POST", body: formData }
+      );
+      
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFileUrl(data.secure_url);
+      console.log("✅ File uploaded:", data.secure_url);
+    } catch (err) {
+      console.error("File upload error:", err);
+      setError("File upload failed: " + err.message);
+    }
+  };
+
+  // 🔥 Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      const { url } = await uploadToCloudinary(file, "content_images");
+      setImageUrl(url);
+    } catch (err) {
+      console.error("Image upload error:", err);
+      setError("Image upload failed: " + err.message);
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -418,7 +490,6 @@ const UploadContent = ({ onUpload }) => {
     setLoading(true);
     
     try {
-      // Insert content into Supabase
       const { data, error } = await sb
         .from("content")
         .insert({
@@ -427,9 +498,9 @@ const UploadContent = ({ onUpload }) => {
           meta: meta.trim() || "New content",
           price: space.type === "book" ? price : null,
           blurb: space.type === "book" ? blurb : null,
-          video_url: space.type === "video" || space.type === "poetry" ? videoUrl || fileUrl : null,
-          audio_url: space.type === "audio" ? fileUrl : null,
-          file_url: space.type === "book" ? fileUrl : null,
+          video_url: space.type === "video" || space.type === "poetry" ? videoUrl || null : null,
+          audio_url: space.type === "audio" ? fileUrl || null : null,
+          file_url: fileUrl || null,
           image_url: imageUrl || null,
         })
         .select();
@@ -450,6 +521,7 @@ const UploadContent = ({ onUpload }) => {
         setImageUrl("");
         setFileUrl("");
         setFileName("");
+        setDriveFileId("");
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) {
@@ -460,40 +532,11 @@ const UploadContent = ({ onUpload }) => {
     }
   };
 
-  // Handle file upload to Cloudinary
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFileName(file.name);
-    
-    try {
-      const { url } = await uploadToCloudinary(file, "content");
-      setFileUrl(url);
-    } catch (err) {
-      console.error("File upload error:", err);
-      setError("File upload failed: " + err.message);
-    }
-  };
-
-  // Handle image upload
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    try {
-      const { url } = await uploadToCloudinary(file, "content_images");
-      setImageUrl(url);
-    } catch (err) {
-      console.error("Image upload error:", err);
-      setError("Image upload failed: " + err.message);
-    }
-  };
-
   return (
     <div className="max-w-xl">
       <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Upload Content</h2>
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-        Add new content to your spaces. It will appear on the site immediately.
+        Add new content to your spaces. Supports images, videos, and PDFs.
       </p>
 
       {error && (
@@ -546,14 +589,70 @@ const UploadContent = ({ onUpload }) => {
           {imageUrl && <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ Image uploaded</p>}
         </div>
 
+        {/* 🔥 FILE UPLOAD SECTION WITH GOOGLE DRIVE OPTION */}
         <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Upload File</label>
-          <label className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl cursor-pointer" style={{ border: `2px dashed ${C.border}`, background: C.fainter }}>
-            <UploadCloud size={20} color={space.accent} />
-            <span className="font-body text-[12.5px]" style={{ color: C.dim }}>{fileName || `Choose a ${space.type === "audio" ? "audio" : space.type === "book" ? "PDF" : "video"} file`}</span>
-            <input type="file" className="hidden" onChange={handleFileUpload} />
-          </label>
-          {fileUrl && <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ File uploaded</p>}
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Upload File / PDF</label>
+          
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setUploadMethod("cloudinary")}
+              className={`px-3 py-1.5 rounded-xl font-body text-[11px] ${uploadMethod === "cloudinary" ? "bg-white/10" : ""}`}
+              style={{ border: `1px solid ${uploadMethod === "cloudinary" ? C.violet : C.border}`, color: uploadMethod === "cloudinary" ? C.violet : C.faint }}
+            >
+              Upload File
+            </button>
+            <button
+              type="button"
+              onClick={() => setUploadMethod("googledrive")}
+              className={`px-3 py-1.5 rounded-xl font-body text-[11px] ${uploadMethod === "googledrive" ? "bg-white/10" : ""}`}
+              style={{ border: `1px solid ${uploadMethod === "googledrive" ? C.violet : C.border}`, color: uploadMethod === "googledrive" ? C.violet : C.faint }}
+            >
+              📁 Google Drive
+            </button>
+          </div>
+
+          {uploadMethod === "cloudinary" && (
+            <label className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl cursor-pointer" style={{ border: `2px dashed ${C.border}`, background: C.fainter }}>
+              <UploadCloud size={20} color={space.accent} />
+              <span className="font-body text-[12.5px]" style={{ color: C.dim }}>{fileName || `Choose a ${space.type === "audio" ? "audio" : space.type === "book" ? "PDF" : "video"} file`}</span>
+              <input type="file" className="hidden" onChange={handleFileUpload} />
+            </label>
+          )}
+
+          {uploadMethod === "googledrive" && (
+            <div className="space-y-2">
+              <div className="p-4 rounded-2xl" style={{ background: C.fainter, border: `1px solid ${C.border}` }}>
+                <p className="font-body text-[12px]" style={{ color: C.dim }}>📌 Paste your Google Drive share link below</p>
+                <p className="font-body text-[10px] mt-1" style={{ color: C.faint }}>Example: https://drive.google.com/file/d/abc123/view</p>
+                <div className="flex gap-2 mt-2">
+                  <input 
+                    type="text" 
+                    value={driveLink}
+                    onChange={(e) => setDriveLink(e.target.value)}
+                    placeholder="Paste Google Drive link here..."
+                    className="flex-1 px-4 py-2 rounded-xl font-body text-[13px] outline-none"
+                    style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDriveUpload}
+                    className="px-4 py-2 rounded-xl font-body text-[13px] font-semibold"
+                    style={{ background: `linear-gradient(135deg, ${C.violet}, ${C.blue})`, color: "white" }}
+                  >
+                    Link
+                  </button>
+                </div>
+              </div>
+              {fileUrl && (
+                <p className="font-body text-[11px]" style={{ color: C.good }}>✅ Google Drive PDF linked</p>
+              )}
+            </div>
+          )}
+
+          {fileUrl && uploadMethod === "cloudinary" && (
+            <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ File uploaded</p>
+          )}
         </div>
 
         <button type="submit" disabled={loading} className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white", opacity: loading ? 0.7 : 1 }}>
