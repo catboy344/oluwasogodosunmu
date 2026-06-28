@@ -467,102 +467,103 @@ const AuthModal = ({ onClose, onAuth, defaultMode = "signup" }) => {
     "rgba(236,72,153,0.15)", "rgba(52,211,153,0.15)", "rgba(251,146,60,0.15)"
   ];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess(false);
-    
-    if (!email || !password || (mode === "signup" && !name)) {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
-      return;
-    }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setSuccess(false);
+  
+  if (!email || !password || (mode === "signup" && !name)) {
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      if (mode === "signup") {
-        const { data, error } = await sb.auth.signUp({
-          email: email,
-          password: password,
-          options: { data: { full_name: name } },
-        });
+  try {
+    if (mode === "signup") {
+      console.log("🚀 Attempting signup for:", email);
+      
+      const { data, error } = await sb.auth.signUp({
+        email: email,
+        password: password,
+        options: { 
+          data: { full_name: name },
+          emailRedirectTo: window.location.origin // 🔥 ADD THIS
+        },
+      });
+      
+      console.log("📥 Signup response:", { data, error });
+      console.log("📥 Error details:", JSON.stringify(error, null, 2));
+      
+      if (error) {
+        console.error("❌ Full error:", error);
         
-        if (error) {
-          console.error("Signup error:", error);
-          if (error.message.includes("User already registered") || 
-              error.message.includes("already registered")) {
-            setError("This email is already registered. Please log in instead.");
-            setTimeout(() => {
-              setMode("login");
-              setError("");
-            }, 3000);
-          } else {
-            setError(error.message || "Signup failed. Please try again.");
-          }
-          setLoading(false);
-          return;
-        }
-        
-        if (data.user) {
-          if (data.user.confirmed_at === null) {
-            setSuccess(true);
-            setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
-            setLoading(false);
-            setEmail("");
-            setPassword("");
-            setName("");
-            setTimeout(() => {
-              onClose();
-              setError("");
-              setSuccess(false);
-            }, 5000);
-          } else {
-            onAuth({ name: name, email: email, id: data.user.id });
-          }
-          return;
-        }
-      } else {
-        // LOGIN
-        const { data, error } = await sb.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
-        
-        if (error) {
-          console.error("Login error:", error);
-          if (error.message.includes("Email not confirmed")) {
-            setError("📧 Please confirm your email first. Check your inbox or spam folder!");
-          } else if (error.message.includes("Invalid login credentials")) {
-            setError("❌ Wrong email or password. Please try again.");
-          } else {
-            setError(error.message || "Login failed. Please try again.");
-          }
-          setLoading(false);
-          return;
-        }
-        
-        if (data.user) {
-          if (data.user.confirmed_at === null) {
-            setError("📧 Please confirm your email first. Check your inbox or spam folder!");
-            setLoading(false);
-            return;
-          }
-          
-          onAuth({ 
-            name: data.user.user_metadata?.full_name || email.split("@")[0],
-            email: email,
-            id: data.user.id
-          });
-        }
+        // 🔥 SHOW THE ACTUAL ERROR
+        setError(`❌ ${error.message || "Signup failed"}`);
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error("Auth error:", err);
-      setError(err.message || "An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
+      
+      if (data.user) {
+        if (data.user.confirmed_at === null) {
+          setSuccess(true);
+          setError("✅ Confirmation email sent! Please check your email and confirm before logging in.");
+          setLoading(false);
+          setEmail("");
+          setPassword("");
+          setName("");
+          setTimeout(() => {
+            onClose();
+            setError("");
+            setSuccess(false);
+          }, 5000);
+        } else {
+          onAuth({ name: name, email: email, id: data.user.id });
+        }
+        return;
+      }
+    } else {
+      // LOGIN
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+      
+      if (error) {
+        console.error("Login error:", error);
+        if (error.message.includes("Email not confirmed")) {
+          setError("📧 Please confirm your email first. Check your inbox or spam folder!");
+        } else if (error.message.includes("Invalid login credentials")) {
+          setError("❌ Wrong email or password. Please try again.");
+        } else {
+          setError(`❌ ${error.message || "Login failed"}`);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      if (data.user) {
+        if (data.user.confirmed_at === null) {
+          setError("📧 Please confirm your email first. Check your inbox or spam folder!");
+          setLoading(false);
+          return;
+        }
+        
+        onAuth({ 
+          name: data.user.user_metadata?.full_name || email.split("@")[0],
+          email: email,
+          id: data.user.id
+        });
+      }
     }
-  };
+  } catch (err) {
+    console.error("🔥 CATCH ERROR:", err);
+    setError(`❌ ${err.message || "An error occurred"}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogleLogin = async () => {
     try {
