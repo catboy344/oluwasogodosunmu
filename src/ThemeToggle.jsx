@@ -9,36 +9,61 @@ const ThemeToggle = () => {
 
   return (
     <div 
-      className="flex items-center gap-2 cursor-pointer"
+      className="flex items-center gap-3 cursor-pointer"
       onClick={toggleTheme}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Label */}
-      <span 
-        className="font-body text-[9px] font-medium tracking-[0.08em] uppercase transition-colors duration-300"
-        style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}
+      {/* Label - BIGGER */}
+      <motion.span 
+        className="font-body text-[11px] font-semibold tracking-[0.1em] uppercase"
+        animate={{ 
+          color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+          scale: isHovering ? 1.05 : 1
+        }}
+        transition={{ duration: 0.3 }}
       >
         {isDark ? 'Dark' : 'Day'}
-      </span>
+      </motion.span>
 
-      {/* Toggle Track with GLOW */}
-      <div 
-        className="relative w-9 h-5 rounded-full transition-all duration-300 flex-shrink-0"
-        style={{
-          background: isDark ? '#4a4a6a' : '#f7971e',
+      {/* Toggle Track - BIGGER & BOLDER */}
+      <motion.div 
+        className="relative w-12 h-6 rounded-full flex-shrink-0"
+        animate={{
+          background: isDark 
+            ? 'linear-gradient(135deg, #1a1a2e, #16213e)' 
+            : 'linear-gradient(135deg, #f7971e, #ffd200)',
           boxShadow: isDark 
-            ? `0 0 ${isHovering ? '20px' : '10px'} rgba(124,58,237,${isHovering ? '0.4' : '0.2'})` 
-            : `0 0 ${isHovering ? '20px' : '10px'} rgba(255,210,0,${isHovering ? '0.4' : '0.2'})`,
-          transition: 'box-shadow 0.3s ease'
+            ? `0 0 ${isHovering ? '30px' : '15px'} rgba(124,58,237,${isHovering ? '0.5' : '0.25'})` 
+            : `0 0 ${isHovering ? '30px' : '15px'} rgba(255,210,0,${isHovering ? '0.5' : '0.25'})`,
+          scale: isHovering ? 1.05 : 1,
         }}
+        transition={{ duration: 0.3 }}
       >
-        {/* Knob with SMOOTH SPRING transition */}
+        {/* Pulsing glow behind toggle */}
         <motion.div
-          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md flex items-center justify-center"
+          className="absolute inset-0 rounded-full"
+          animate={{
+            opacity: isHovering ? 0.8 : 0.3,
+            scale: isHovering ? 1.2 : 1,
+          }}
+          transition={{ duration: 0.5 }}
+          style={{
+            background: isDark 
+              ? 'radial-gradient(circle, rgba(124,58,237,0.3), transparent)' 
+              : 'radial-gradient(circle, rgba(255,210,0,0.3), transparent)',
+          }}
+        />
+
+        {/* Knob - BIGGER with spring animation */}
+        <motion.div
+          className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-lg flex items-center justify-center"
           animate={{ 
-            x: isDark ? 18 : 1.5,
-            scale: isHovering ? 1.1 : 1
+            x: isDark ? 28 : 2,
+            scale: isHovering ? 1.15 : 1,
+            boxShadow: isDark 
+              ? '0 2px 15px rgba(124,58,237,0.4)' 
+              : '0 2px 15px rgba(255,210,0,0.4)'
           }}
           transition={{ 
             type: 'spring', 
@@ -47,12 +72,26 @@ const ThemeToggle = () => {
           }}
         >
           {isDark ? (
-            <Moon size={8} color="#4a4a6a" fill="#4a4a6a" />
+            <Moon size={9} color="#7C3AED" fill="#7C3AED" />
           ) : (
-            <Sun size={8} color="#f7971e" fill="#f7971e" />
+            <Sun size={9} color="#f7971e" fill="#f7971e" />
           )}
         </motion.div>
-      </div>
+
+        {/* Animated sparkle effect on toggle */}
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          animate={{
+            opacity: isHovering ? 1 : 0,
+          }}
+          transition={{ duration: 0.3 }}
+          style={{
+            background: isDark 
+              ? 'radial-gradient(circle at 70%, rgba(124,58,237,0.15), transparent)' 
+              : 'radial-gradient(circle at 70%, rgba(255,210,0,0.15), transparent)',
+          }}
+        />
+      </motion.div>
     </div>
   );
 };
