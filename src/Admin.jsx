@@ -409,30 +409,35 @@ const UploadContent = ({ onUpload }) => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [uploadMethod, setUploadMethod] = useState("cloudinary"); // "cloudinary" or "googledrive"
-  const [driveFileId, setDriveFileId] = useState("");
+  const [uploadMethod, setUploadMethod] = useState("cloudinary");
   const [driveLink, setDriveLink] = useState("");
   const space = SPACES.find(s => s.id === spaceId);
 
-  // 🔥 Handle Google Drive upload (opens Google Drive picker or manual entry)
-  const handleDriveUpload = async () => {
-    // Option 1: Manual entry (simplest)
-    const link = prompt("Paste your Google Drive share link:\nExample: https://drive.google.com/file/d/abc123/view");
-    if (link) {
-      // Extract file ID from Google Drive link
-      const match = link.match(/\/d\/([^\/]+)/);
-      if (match) {
-        const fileId = match[1];
-        const directLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
-        setFileUrl(directLink);
-        setFileName("Google Drive PDF");
-        setDriveFileId(fileId);
-        alert("✅ Google Drive PDF linked successfully!");
+  // 🔥 Handle Google Drive upload
+  const handleDriveUpload = () => {
+    if (!driveLink.trim()) {
+      setError("Please paste a Google Drive link");
+      return;
+    }
+    
+    // Extract file ID from Google Drive link
+    const match = driveLink.match(/\/d\/([^\/]+)/);
+    if (match) {
+      const fileId = match[1];
+      const directLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      setFileUrl(directLink);
+      setFileName("Google Drive PDF");
+      setError("");
+      alert("✅ Google Drive PDF linked successfully!");
+    } else {
+      // Check if it's already a direct link
+      if (driveLink.includes('drive.google.com')) {
+        setError("Could not extract file ID. Make sure you're using the correct share link.");
       } else {
-        // If it's already a direct link
-        setFileUrl(link);
-        setFileName("Google Drive PDF");
-        alert("✅ Google Drive PDF linked successfully!");
+        setFileUrl(driveLink);
+        setFileName("External PDF");
+        setError("");
+        alert("✅ PDF linked successfully!");
       }
     }
   };
@@ -444,7 +449,6 @@ const UploadContent = ({ onUpload }) => {
     setFileName(file.name);
     
     try {
-      // Detect if it's a PDF
       const isPDF = file.type === 'application/pdf' || file.name.endsWith('.pdf');
       const resourceType = isPDF ? 'raw' : 'auto';
       const uploadType = isPDF ? 'raw' : 'upload';
@@ -463,7 +467,7 @@ const UploadContent = ({ onUpload }) => {
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       setFileUrl(data.secure_url);
-      console.log("✅ File uploaded:", data.secure_url);
+      setError("");
     } catch (err) {
       console.error("File upload error:", err);
       setError("File upload failed: " + err.message);
@@ -478,6 +482,7 @@ const UploadContent = ({ onUpload }) => {
     try {
       const { url } = await uploadToCloudinary(file, "content_images");
       setImageUrl(url);
+      setError("");
     } catch (err) {
       console.error("Image upload error:", err);
       setError("Image upload failed: " + err.message);
@@ -521,7 +526,7 @@ const UploadContent = ({ onUpload }) => {
         setImageUrl("");
         setFileUrl("");
         setFileName("");
-        setDriveFileId("");
+        setDriveLink("");
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) {
@@ -536,7 +541,7 @@ const UploadContent = ({ onUpload }) => {
     <div className="max-w-xl">
       <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Upload Content</h2>
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-        Add new content to your spaces. Supports images, videos, and PDFs.
+        Add new content to your spaces. It will appear on the site immediately.
       </p>
 
       {error && (
@@ -589,7 +594,7 @@ const UploadContent = ({ onUpload }) => {
           {imageUrl && <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ Image uploaded</p>}
         </div>
 
-        {/* 🔥 FILE UPLOAD SECTION WITH GOOGLE DRIVE OPTION */}
+        {/* 🔥 FILE UPLOAD WITH GOOGLE DRIVE OPTION */}
         <div>
           <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Upload File / PDF</label>
           
@@ -597,7 +602,7 @@ const UploadContent = ({ onUpload }) => {
             <button
               type="button"
               onClick={() => setUploadMethod("cloudinary")}
-              className={`px-3 py-1.5 rounded-xl font-body text-[11px] ${uploadMethod === "cloudinary" ? "bg-white/10" : ""}`}
+              className={`px-3 py-1.5 rounded-xl font-body text-[11px] transition-all ${uploadMethod === "cloudinary" ? "bg-white/10" : ""}`}
               style={{ border: `1px solid ${uploadMethod === "cloudinary" ? C.violet : C.border}`, color: uploadMethod === "cloudinary" ? C.violet : C.faint }}
             >
               Upload File
@@ -605,7 +610,7 @@ const UploadContent = ({ onUpload }) => {
             <button
               type="button"
               onClick={() => setUploadMethod("googledrive")}
-              className={`px-3 py-1.5 rounded-xl font-body text-[11px] ${uploadMethod === "googledrive" ? "bg-white/10" : ""}`}
+              className={`px-3 py-1.5 rounded-xl font-body text-[11px] transition-all ${uploadMethod === "googledrive" ? "bg-white/10" : ""}`}
               style={{ border: `1px solid ${uploadMethod === "googledrive" ? C.violet : C.border}`, color: uploadMethod === "googledrive" ? C.violet : C.faint }}
             >
               📁 Google Drive
@@ -621,41 +626,35 @@ const UploadContent = ({ onUpload }) => {
           )}
 
           {uploadMethod === "googledrive" && (
-            <div className="space-y-2">
-              <div className="p-4 rounded-2xl" style={{ background: C.fainter, border: `1px solid ${C.border}` }}>
-                <p className="font-body text-[12px]" style={{ color: C.dim }}>📌 Paste your Google Drive share link below</p>
-                <p className="font-body text-[10px] mt-1" style={{ color: C.faint }}>Example: https://drive.google.com/file/d/abc123/view</p>
-                <div className="flex gap-2 mt-2">
-                  <input 
-                    type="text" 
-                    value={driveLink}
-                    onChange={(e) => setDriveLink(e.target.value)}
-                    placeholder="Paste Google Drive link here..."
-                    className="flex-1 px-4 py-2 rounded-xl font-body text-[13px] outline-none"
-                    style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDriveUpload}
-                    className="px-4 py-2 rounded-xl font-body text-[13px] font-semibold"
-                    style={{ background: `linear-gradient(135deg, ${C.violet}, ${C.blue})`, color: "white" }}
-                  >
-                    Link
-                  </button>
-                </div>
+            <div className="p-4 rounded-2xl" style={{ background: C.fainter, border: `1px solid ${C.border}` }}>
+              <p className="font-body text-[12px]" style={{ color: C.dim }}>📌 Paste your Google Drive share link</p>
+              <p className="font-body text-[10px] mt-1" style={{ color: C.faint }}>Example: https://drive.google.com/file/d/abc123/view</p>
+              <div className="flex gap-2 mt-2">
+                <input 
+                  type="text" 
+                  value={driveLink}
+                  onChange={(e) => setDriveLink(e.target.value)}
+                  placeholder="Paste Google Drive link..."
+                  className="flex-1 px-4 py-2 rounded-xl font-body text-[13px] outline-none"
+                  style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.white }}
+                />
+                <button
+                  type="button"
+                  onClick={handleDriveUpload}
+                  className="px-4 py-2 rounded-xl font-body text-[13px] font-semibold whitespace-nowrap"
+                  style={{ background: `linear-gradient(135deg, ${C.violet}, ${C.blue})`, color: "white" }}
+                >
+                  Link PDF
+                </button>
               </div>
-              {fileUrl && (
-                <p className="font-body text-[11px]" style={{ color: C.good }}>✅ Google Drive PDF linked</p>
+              {fileUrl && uploadMethod === "googledrive" && (
+                <p className="font-body text-[11px] mt-2" style={{ color: C.good }}>✅ Google Drive PDF linked</p>
               )}
             </div>
           )}
-
-          {fileUrl && uploadMethod === "cloudinary" && (
-            <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ File uploaded</p>
-          )}
         </div>
 
-        <button type="submit" disabled={loading} className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white", opacity: loading ? 0.7 : 1 }}>
+        <button type="submit" disabled={loading} className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold transition-opacity" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white", opacity: loading ? 0.7 : 1 }}>
           {loading ? "Saving..." : "Save Content"}
         </button>
         {success && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-body text-[12.5px]" style={{ color: C.good }}>✓ Content saved to Supabase!</motion.p>}
