@@ -1096,6 +1096,97 @@ export default function Site() {
     };
   }, []);
 
+  // 🔥 GOOGLE WELCOME EMAIL - ADDED HERE
+  useEffect(() => {
+    const sendWelcomeEmail = async () => {
+      // Only run if user is logged in
+      if (!user) return;
+      
+      // Check if welcome email already sent
+      const welcomeSent = localStorage.getItem(`welcome_${user.id}`);
+      if (welcomeSent) return;
+      
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+           'Authorization': 'Bearer re_VmZTuJvF_23mUrh32qHtLvBNeasgcMR8q',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'onboarding@resend.dev',
+            to: user.email,
+            subject: 'Welcome to Oluwasogo Dosunmu! 🙌',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; background: #0E1015; color: #ffffff;">
+                <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <h1 style="font-family: 'Georgia', serif; font-size: 28px; color: #ffffff; margin: 0;">
+                    Oluwasogo Dosunmu
+                  </h1>
+                  <p style="color: rgba(255,255,255,0.4); font-size: 14px; margin-top: 5px;">
+                    Author · Poet · Speaker · Visionary
+                  </p>
+                </div>
+
+                <div style="padding: 30px 0;">
+                  <h2 style="color: #ffffff; font-size: 22px;">
+                    Welcome to My World! 🎉
+                  </h2>
+                  
+                  <p style="color: rgba(255,255,255,0.7); font-size: 16px; line-height: 1.6;">
+                    Thank you for joining, <strong>${user.name || 'Friend'}</strong>!
+                  </p>
+
+                  <p style="color: rgba(255,255,255,0.7); font-size: 16px; line-height: 1.6;">
+                    You now have access to exclusive content, inspiring messages, poetry, sermons, and more.
+                  </p>
+
+                  <div style="margin: 30px 0; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; border-left: 4px solid #7C3AED;">
+                    <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin: 0;">
+                      ✨ <strong>What you'll find:</strong> Exclusive podcasts, inspiring poetry, powerful sermons, 
+                      worship sessions, and access to my books and writings.
+                    </p>
+                  </div>
+
+                  <div style="text-align: center; margin: 35px 0;">
+                    <a href="${window.location.origin}" 
+                       style="background: linear-gradient(135deg, #7C3AED, #2563EB); 
+                              color: #ffffff; 
+                              padding: 14px 40px; 
+                              text-decoration: none; 
+                              border-radius: 30px; 
+                              font-size: 16px; 
+                              font-weight: bold;
+                              display: inline-block;">
+                      Explore Now →
+                    </a>
+                  </div>
+                </div>
+
+                <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                  <p style="color: rgba(255,255,255,0.2); font-size: 12px;">
+                    © ${new Date().getFullYear()} Oluwasogo Dosunmu. All rights reserved.
+                  </p>
+                </div>
+              </div>
+            `,
+          }),
+        });
+        
+        if (res.ok) {
+          localStorage.setItem(`welcome_${user.id}`, 'sent');
+          console.log("✅ Welcome email sent to:", user.email);
+        } else {
+          console.error("❌ Failed to send welcome email:", await res.text());
+        }
+      } catch (err) {
+        console.error("❌ Welcome email error:", err);
+      }
+    };
+
+    sendWelcomeEmail();
+  }, [user]);
+
   const handleSelectSpace = useCallback((id) => {
     if (user) { 
       setView(id); 
