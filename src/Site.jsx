@@ -732,13 +732,56 @@ const Engagement = ({ contentId, user, accent }) => {
 };
 
 /* ---------------------------------------------------------------
-   SPACE VIEW - THEMED
+   SPACE VIEW - FETCHES FROM SUPABASE
 --------------------------------------------------------------- */
 const SpaceView = ({ space, user, onBack }) => {
   const { isDark } = useTheme();
   const colors = getThemeColors(isDark);
-  const content = sampleContent(space);
-  
+  const [content, setContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await sb
+          .from("content")
+          .select("*")
+          .eq("space_id", space.id)
+          .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching content:", error);
+          setError(error.message);
+          return;
+        }
+        
+        setContent(data || []);
+      } catch (err) {
+        console.error("Failed to load content:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchContent();
+  }, [space.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: colors.background, transition: "all 0.3s ease" }}>
+        <button onClick={onBack} className="fixed top-5 left-5 z-50 flex items-center gap-2 font-body text-[13px] px-4 py-2.5 rounded-full" style={{ color: colors.textPrimary, background: isDark ? "rgba(20,20,28,0.92)" : "rgba(255,255,255,0.92)", border: `1px solid ${colors.borderLight}`, backdropFilter: "blur(10px)" }}>
+          <ArrowLeft size={14} /> Back
+        </button>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `2px solid ${colors.borderColor}`, borderTopColor: colors.textPrimary }} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{ background: colors.background, transition: "all 0.3s ease" }}>
       <button
@@ -766,34 +809,49 @@ const SpaceView = ({ space, user, onBack }) => {
         </div>
       </div>
       <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 space-y-4">
-        {content.map((item, i) => (
-          <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-fraunces text-xl font-semibold" style={{ color: colors.textPrimary }}>{item.title}</h3>
-                <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>{item.meta}</p>
-              </div>
-              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
-                <Play size={14} color={space.accent} fill={space.accent} />
-              </div>
-            </div>
-            {space.type === "book" && (
-              <div className="mt-4">
-                <p className="font-body text-[13.5px] leading-relaxed" style={{ color: colors.textSecondary }}>{item.blurb}</p>
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <button className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold" style={{ background: space.accent, color: "#07080C" }}>Read PDF · {item.price}</button>
-                  <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}>Buy hardcover</button>
+        {content.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="font-body text-[14px]" style={{ color: colors.textMuted }}>
+              No content yet. Check back soon!
+            </p>
+          </div>
+        ) : (
+          content.map((item, i) => (
+            <motion.div key={item.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="p-6 rounded-3xl" style={{ background: colors.backgroundCard, border: `1px solid ${colors.borderColor}` }}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-fraunces text-xl font-semibold" style={{ color: colors.textPrimary }}>{item.title}</h3>
+                  <p className="font-body text-[12px] mt-1" style={{ color: colors.textMuted }}>{item.meta || "New content"}</p>
+                  {item.video_url && (
+                    <div className="mt-3 rounded-xl overflow-hidden">
+                      <video src={item.video_url} className="w-full max-h-[300px]" controls playsInline />
+                    </div>
+                  )}
+                  {item.image_url && !item.video_url && (
+                    <img src={item.image_url} alt={item.title} className="mt-3 rounded-xl w-full max-h-[300px] object-cover" />
+                  )}
+                </div>
+                <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
+                  <Play size={14} color={space.accent} fill={space.accent} />
                 </div>
               </div>
-            )}
-            <Engagement contentId={item.id} user={user} accent={space.accent} />
-          </motion.div>
-        ))}
+              {space.type === "book" && item.blurb && (
+                <div className="mt-4">
+                  <p className="font-body text-[13.5px] leading-relaxed" style={{ color: colors.textSecondary }}>{item.blurb}</p>
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <button className="px-5 py-2.5 rounded-xl font-body text-[13px] font-semibold" style={{ background: space.accent, color: "#07080C" }}>Read PDF · {item.price || "Free"}</button>
+                    <button className="px-5 py-2.5 rounded-xl font-body text-[13px]" style={{ border: `1px solid ${colors.borderColor}`, color: colors.textSecondary }}>Buy hardcover</button>
+                  </div>
+                </div>
+              )}
+              <Engagement contentId={item.id} user={user} accent={space.accent} />
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
 };
-
 /* ---------------------------------------------------------------
    HOMEPAGE - THEMED WITH ADS SECTION (MORE SPACE ABOVE)
 --------------------------------------------------------------- */
