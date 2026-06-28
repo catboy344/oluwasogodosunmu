@@ -396,7 +396,7 @@ const Nav = ({ onSelectSpace, onGoHome }) => {
       <div className="max-w-6xl mx-auto px-6 md:px-10 h-[68px] flex items-center justify-between relative">
 
         {/* LEFT: Theme Toggle + Logo */}
-        <div className="relative z-20 shrink-0 flex items-center gap-1.5 mr-12">
+        <div className="relative z-20 shrink-0 flex items-center gap-1 mr-12">
           {/* Theme Toggle - NOW IN FRONT OF LOGO */}
           <ThemeToggle />
           <button 
