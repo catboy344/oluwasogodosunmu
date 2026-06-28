@@ -395,33 +395,112 @@ const Photos = () => {
 };
 
 /* ---------------------------------------------------------------
-   UPLOAD CONTENT
+   UPLOAD CONTENT - SAVES TO SUPABASE
 --------------------------------------------------------------- */
 const UploadContent = ({ onUpload }) => {
   const [spaceId, setSpaceId] = useState(SPACES[0].id);
   const [title, setTitle] = useState("");
   const [meta, setMeta] = useState("");
   const [price, setPrice] = useState("");
+  const [blurb, setBlurb] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [fileUrl, setFileUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const space = SPACES.find(s => s.id === spaceId);
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    const newItem = { id: `${spaceId}-custom-${Date.now()}`, spaceId, title: title.trim(), meta: meta.trim() || "New content", price: space.type === "book" ? price : undefined, fileName: fileName || "No file attached yet" };
-    await onUpload(newItem);
-    setTitle(""); setMeta(""); setPrice(""); setFileName("");
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 2400);
+    setError("");
+    setLoading(true);
+    
+    try {
+      // Insert content into Supabase
+      const { data, error } = await sb
+        .from("content")
+        .insert({
+          space_id: spaceId,
+          title: title.trim(),
+          meta: meta.trim() || "New content",
+          price: space.type === "book" ? price : null,
+          blurb: space.type === "book" ? blurb : null,
+          video_url: space.type === "video" || space.type === "poetry" ? videoUrl || fileUrl : null,
+          audio_url: space.type === "audio" ? fileUrl : null,
+          file_url: space.type === "book" ? fileUrl : null,
+          image_url: imageUrl || null,
+        })
+        .select();
+      
+      if (error) {
+        console.error("Supabase error:", error);
+        setError(error.message);
+        return;
+      }
+      
+      if (data) {
+        setSuccess(true);
+        setTitle("");
+        setMeta("");
+        setPrice("");
+        setBlurb("");
+        setVideoUrl("");
+        setImageUrl("");
+        setFileUrl("");
+        setFileName("");
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle file upload to Cloudinary
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setFileName(file.name);
+    
+    try {
+      const { url } = await uploadToCloudinary(file, "content");
+      setFileUrl(url);
+    } catch (err) {
+      console.error("File upload error:", err);
+      setError("File upload failed: " + err.message);
+    }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      const { url } = await uploadToCloudinary(file, "content_images");
+      setImageUrl(url);
+    } catch (err) {
+      console.error("Image upload error:", err);
+      setError("Image upload failed: " + err.message);
+    }
   };
 
   return (
     <div className="max-w-xl">
       <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Upload Content</h2>
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>
-        Add a new piece to one of your spaces. Real file storage connects when we deploy.
+        Add new content to your spaces. It will appear on the site immediately.
       </p>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-xl" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
+          <p className="font-body text-[13px]" style={{ color: "#ef4444" }}>{error}</p>
+        </div>
+      )}
 
       <form onSubmit={submit} className="space-y-5">
         <div>
@@ -431,98 +510,173 @@ const UploadContent = ({ onUpload }) => {
           </select>
         </div>
 
-        {[["Title", title, setTitle, "e.g. Episode 03 — Finding Peace"],
-          ["Description / Duration", meta, setMeta, "e.g. 24 min · Episode 03"]
-        ].map(([label, val, setter, placeholder]) => (
-          <div key={label}>
-            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>{label}</label>
-            <input value={val} onChange={e => setter(e.target.value)} placeholder={placeholder} className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
-          </div>
-        ))}
+        <div>
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Title *</label>
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Episode 03 — Finding Peace" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} required />
+        </div>
+
+        <div>
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Description / Duration</label>
+          <input value={meta} onChange={e => setMeta(e.target.value)} placeholder="e.g. 24 min · Episode 03" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+        </div>
 
         {space.type === "book" && (
+          <>
+            <div>
+              <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Price</label>
+              <input value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. ₦3,500" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+            </div>
+            <div>
+              <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Blurb / Description</label>
+              <textarea value={blurb} onChange={e => setBlurb(e.target.value)} rows="3" placeholder="A quiet collection on grief, faith, and the words we keep folded in our pockets." className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl resize-none" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+            </div>
+          </>
+        )}
+
+        {(space.type === "video" || space.type === "poetry") && (
           <div>
-            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Price</label>
-            <input value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. ₦3,500" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+            <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Video URL (YouTube or Cloudinary)</label>
+            <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=xxxxx" className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
           </div>
         )}
 
         <div>
-          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>File</label>
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Thumbnail Image</label>
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full bg-transparent outline-none font-body text-[13.5px] px-4 py-3.5 rounded-2xl" style={{ border: `1px solid ${C.border}`, color: C.white, background: C.surface }} />
+          {imageUrl && <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ Image uploaded</p>}
+        </div>
+
+        <div>
+          <label className="font-body text-[11px] tracking-[0.2em] uppercase block mb-2" style={{ color: C.faint }}>Upload File</label>
           <label className="flex flex-col items-center justify-center gap-2 py-8 rounded-2xl cursor-pointer" style={{ border: `2px dashed ${C.border}`, background: C.fainter }}>
             <UploadCloud size={20} color={space.accent} />
             <span className="font-body text-[12.5px]" style={{ color: C.dim }}>{fileName || `Choose a ${space.type === "audio" ? "audio" : space.type === "book" ? "PDF" : "video"} file`}</span>
-            <input type="file" className="hidden" onChange={e => setFileName(e.target.files?.[0]?.name || "")} />
+            <input type="file" className="hidden" onChange={handleFileUpload} />
           </label>
-          <p className="font-body text-[10.5px] mt-2" style={{ color: C.faint }}>Real upload connects to Cloudinary at deploy.</p>
+          {fileUrl && <p className="font-body text-[11px] mt-1" style={{ color: C.good }}>✅ File uploaded</p>}
         </div>
 
-        <button type="submit" className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white" }}>
-          Save Content
+        <button type="submit" disabled={loading} className="px-7 py-3.5 rounded-2xl font-body text-[13.5px] font-semibold" style={{ background: `linear-gradient(135deg, ${space.accent}, ${ACCENT_COLORS[(ACCENT_COLORS.indexOf(space.accent) + 2) % ACCENT_COLORS.length] || C.blue})`, color: "white", opacity: loading ? 0.7 : 1 }}>
+          {loading ? "Saving..." : "Save Content"}
         </button>
-        {success && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-body text-[12.5px]" style={{ color: C.good }}>✓ Saved — visible in Manage Content.</motion.p>}
+        {success && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-body text-[12.5px]" style={{ color: C.good }}>✓ Content saved to Supabase!</motion.p>}
       </form>
     </div>
   );
 };
-
 /* ---------------------------------------------------------------
-   MANAGE CONTENT
+   MANAGE CONTENT - FETCHES FROM SUPABASE
 --------------------------------------------------------------- */
-const ManageContent = ({ allContent, engagement, onDelete }) => {
+const ManageContent = () => {
+  const [content, setContent] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-  const filtered = filter === "all" ? allContent : allContent.filter(c => c.spaceId === filter);
+  const [error, setError] = useState("");
+
+  const fetchContent = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await sb
+        .from("content")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setContent(data || []);
+    } catch (err) {
+      console.error("Error fetching content:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this content?")) return;
+    try {
+      const { error } = await sb
+        .from("content")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      await fetchContent();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Error deleting: " + err.message);
+    }
+  };
+
+  const filtered = filter === "all" ? content : content.filter(c => c.space_id === filter);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `2px solid ${C.border}`, borderTopColor: C.white }} />
+      </div>
+    );
+  }
 
   return (
     <div>
       <h2 className="font-fraunces text-2xl font-bold mb-1" style={{ color: C.white }}>Manage Content</h2>
-      <p className="font-body text-[13px] mb-6" style={{ color: C.faint }}>Everything you've published, with live engagement numbers.</p>
+      <p className="font-body text-[13px] mb-6" style={{ color: C.faint }}>
+        {content.length} pieces of content across all spaces.
+      </p>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.violet : C.border}`, color: filter === "all" ? C.violet : C.faint, background: filter === "all" ? `${C.violet}14` : "transparent" }}>All</button>
-        {SPACES.map(s => (
-          <button key={s.id} onClick={() => setFilter(s.id)} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === s.id ? s.accent : C.border}`, color: filter === s.id ? s.accent : C.faint, background: filter === s.id ? `${s.accent}14` : "transparent" }}>
-            {s.title}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-1">
-        {filtered.map((item, i) => {
-          const e = engagement[item.id] || { likes: 0, comments: [] };
-          const space = SPACES.find(s => s.id === item.spaceId);
-          const isCustom = item.id.includes("-custom-");
+        <button onClick={() => setFilter("all")} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === "all" ? C.violet : C.border}`, color: filter === "all" ? C.violet : C.faint, background: filter === "all" ? `${C.violet}14` : "transparent" }}>All ({content.length})</button>
+        {SPACES.map(s => {
+          const count = content.filter(c => c.space_id === s.id).length;
           return (
-            <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className="flex items-center justify-between py-4 px-4 rounded-xl"
-              style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${space.accent}22` }}>
-                  <space.Icon size={13} color={space.accent} />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-body text-[13.5px] truncate" style={{ color: C.white }}>{item.title}</p>
-                  <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{space.title} · {item.meta}{item.price ? ` · ${item.price}` : ""}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 shrink-0">
-                <span className="hidden sm:flex items-center gap-1 font-body text-[12px]" style={{ color: C.faint }}><Heart size={12} /> {e.likes}</span>
-                <span className="hidden sm:flex items-center gap-1 font-body text-[12px]" style={{ color: C.faint }}><MessageCircle size={12} /> {e.comments.length}</span>
-                {isCustom && (
-                  <button onClick={() => onDelete(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${C.bad}14` }}>
-                    <Trash2 size={13} color={C.bad} />
-                  </button>
-                )}
-              </div>
-            </motion.div>
+            <button key={s.id} onClick={() => setFilter(s.id)} className="px-3.5 py-1.5 rounded-full font-body text-[12px]" style={{ border: `1px solid ${filter === s.id ? s.accent : C.border}`, color: filter === s.id ? s.accent : C.faint, background: filter === s.id ? `${s.accent}14` : "transparent" }}>
+              {s.title} ({count})
+            </button>
           );
         })}
       </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-8" style={{ color: C.faint }}>
+          <p className="font-body text-[14px]">No content in this space yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {filtered.map((item, i) => {
+            const space = SPACES.find(s => s.id === item.space_id);
+            return (
+              <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                className="flex items-center justify-between py-4 px-4 rounded-xl"
+                style={{ background: i % 2 === 0 ? "transparent" : C.fainter }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${space?.accent || C.violet}22` }}>
+                    <space?.Icon size={13} color={space?.accent || C.violet} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-body text-[13.5px] truncate" style={{ color: C.white }}>{item.title}</p>
+                    <p className="font-body text-[11.5px]" style={{ color: C.faint }}>{space?.title || item.space_id} · {item.meta || "New"}{item.price ? ` · ${item.price}` : ""}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 shrink-0">
+                  <span className="hidden sm:flex items-center gap-1 font-body text-[12px]" style={{ color: C.faint }}>
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent"}
+                  </span>
+                  <button onClick={() => handleDelete(item.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${C.bad}14` }}>
+                    <Trash2 size={13} color={C.bad} />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
-
 /* ---------------------------------------------------------------
    PAYMENTS
 --------------------------------------------------------------- */
