@@ -920,6 +920,7 @@ const Homepage = () => {
   );
 };
 
+
 /* ---------------------------------------------------------------
    ROOT - SITE
 --------------------------------------------------------------- */
@@ -938,6 +939,7 @@ export default function Site() {
       if (event === 'SIGNED_OUT' || !session) {
         localStorage.removeItem("user-profile");
         localStorage.removeItem("session-start");
+        localStorage.removeItem("pending-space");
         setUser(null);
         setView("home");
         console.log("🔄 Auto-logged out: Auth state changed");
@@ -975,6 +977,7 @@ export default function Site() {
         if (elapsed > SESSION_DURATION) {
           localStorage.removeItem("user-profile");
           localStorage.removeItem("session-start");
+          localStorage.removeItem("pending-space");
           await sb.auth.signOut();
           setUser(null);
           setView("home");
@@ -998,14 +1001,18 @@ export default function Site() {
         localStorage.setItem("session-start", now.toString());
         setUser(profile);
         
-        if (pendingSpace) {
-          setView(pendingSpace);
+        // 🔥 CHECK FOR PENDING SPACE IN LOCALSTORAGE
+        const pending = localStorage.getItem("pending-space");
+        if (pending) {
+          setView(pending);
           setPendingSpace(null);
+          localStorage.removeItem("pending-space");
           window.scrollTo(0, 0);
         }
       } else {
         localStorage.removeItem("user-profile");
         localStorage.removeItem("session-start");
+        localStorage.removeItem("pending-space");
         setUser(null);
         setView("home");
       }
@@ -1028,6 +1035,7 @@ export default function Site() {
         if (elapsed > SESSION_DURATION) {
           localStorage.removeItem("user-profile");
           localStorage.removeItem("session-start");
+          localStorage.removeItem("pending-space");
           await sb.auth.signOut();
           setUser(null);
           setView("home");
@@ -1039,6 +1047,7 @@ export default function Site() {
       if (!session && user) {
         localStorage.removeItem("user-profile");
         localStorage.removeItem("session-start");
+        localStorage.removeItem("pending-space");
         setUser(null);
         setView("home");
         console.log("🔄 Auto-logged out: Session expired (Supabase)");
@@ -1073,6 +1082,7 @@ export default function Site() {
             if (!session) {
               localStorage.removeItem("user-profile");
               localStorage.removeItem("session-start");
+              localStorage.removeItem("pending-space");
               setUser(null);
               setView("home");
               console.log("🔄 Auto-logged out: Returned after long absence");
@@ -1096,21 +1106,6 @@ export default function Site() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
-
-  // 🔥 HANDLE GOOGLE LOGIN REDIRECT TO SPACE
-  useEffect(() => {
-    const handleGoogleRedirect = async () => {
-      const { data: { session } } = await sb.auth.getSession();
-      
-      if (session && pendingSpace) {
-        setView(pendingSpace);
-        setPendingSpace(null);
-        window.scrollTo(0, 0);
-      }
-    };
-    
-    handleGoogleRedirect();
-  }, [pendingSpace]);
 
   // 🔥 GOOGLE WELCOME EMAIL
   useEffect(() => {
@@ -1206,7 +1201,9 @@ export default function Site() {
       setView(id); 
       window.scrollTo(0, 0); 
     } else { 
-      setPendingSpace(id); 
+      setPendingSpace(id);
+      // 🔥 SAVE TO LOCALSTORAGE SO IT PERSISTS THROUGH GOOGLE REDIRECT
+      localStorage.setItem("pending-space", id);
       setAuthOpen(true); 
     }
   }, [user]);
@@ -1216,9 +1213,13 @@ export default function Site() {
     localStorage.setItem("user-profile", JSON.stringify(profile)); 
     localStorage.setItem("session-start", Date.now().toString());
     setAuthOpen(false);
-    if (pendingSpace) { 
-      setView(pendingSpace); 
-      setPendingSpace(null); 
+    
+    // 🔥 CHECK FOR PENDING SPACE IN LOCALSTORAGE
+    const pending = localStorage.getItem("pending-space");
+    if (pending) { 
+      setView(pending);
+      setPendingSpace(null);
+      localStorage.removeItem("pending-space");
       window.scrollTo(0, 0); 
     }
   };
@@ -1228,6 +1229,7 @@ export default function Site() {
     localStorage.removeItem("user-profile");
     localStorage.removeItem("session-start");
     localStorage.removeItem("last-activity");
+    localStorage.removeItem("pending-space");
     setUser(null); 
     setView("home"); 
   };
