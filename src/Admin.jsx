@@ -212,11 +212,70 @@ const StatCard = ({ label, value, Icon, accent, delay = 0 }) => (
 );
 
 /* ---------------------------------------------------------------
-   OVERVIEW
+   OVERVIEW - WITH REAL ENGAGEMENT DATA FROM SUPABASE
 --------------------------------------------------------------- */
 const Overview = ({ allContent, engagement }) => {
-  const totalLikes = Object.values(engagement).reduce((s, e) => s + (e?.likes || 0), 0);
-  const totalComments = Object.values(engagement).reduce((s, e) => s + (e?.comments?.length || 0), 0);
+  const [engagementStats, setEngagementStats] = useState({ totalLikes: 0, totalComments: 0 });
+  const [spaceEngagement, setSpaceEngagement] = useState({});
+  
+  // 🔥 Fetch real engagement stats from Supabase
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Get total likes
+        const { count: likes, error: likesError } = await sb
+          .from("engagements")
+          .select("*", { count: 'exact', head: true })
+          .eq("type", "like");
+        
+        // Get total comments
+        const { count: comments, error: commentsError } = await sb
+          .from("engagements")
+          .select("*", { count: 'exact', head: true })
+          .eq("type", "comment");
+        
+        if (!likesError) setEngagementStats(prev => ({ ...prev, totalLikes: likes || 0 }));
+        if (!commentsError) setEngagementStats(prev => ({ ...prev, totalComments: comments || 0 }));
+        
+        // 🔥 Get engagement per space
+        const spaceStats = {};
+        for (const space of SPACES) {
+          // Get content IDs for this space
+          const spaceContent = allContent.filter(c => c.spaceId === space.id);
+          const contentIds = spaceContent.map(c => c.id);
+          
+          if (contentIds.length > 0) {
+            // Get likes for this space
+            const { count: spaceLikes } = await sb
+              .from("engagements")
+              .select("*", { count: 'exact', head: true })
+              .eq("type", "like")
+              .in("content_id", contentIds);
+            
+            // Get comments for this space
+            const { count: spaceComments } = await sb
+              .from("engagements")
+              .select("*", { count: 'exact', head: true })
+              .eq("type", "comment")
+              .in("content_id", contentIds);
+            
+            spaceStats[space.id] = {
+              likes: spaceLikes || 0,
+              comments: spaceComments || 0,
+            };
+          } else {
+            spaceStats[space.id] = { likes: 0, comments: 0 };
+          }
+        }
+        setSpaceEngagement(spaceStats);
+      } catch (err) {
+        console.error("Error fetching engagement stats:", err);
+      }
+    };
+    
+    fetchStats();
+  }, [allContent]);
+
   const revenue = DEMO_PAYMENTS.filter(p => p.status === "paid").reduce((s, p) => s + Number(p.amount.replace(/[₦,]/g, "")), 0);
 
   return (
@@ -225,8 +284,8 @@ const Overview = ({ allContent, engagement }) => {
       <p className="font-body text-[13px] mb-7" style={{ color: C.faint }}>A snapshot of everything happening across your world.</p>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <StatCard label="Total Likes" value={totalLikes} Icon={Heart} accent={C.rose} delay={0} />
-        <StatCard label="Comments" value={totalComments} Icon={MessageCircle} accent={C.violet} delay={0.06} />
+        <StatCard label="Total Likes" value={engagementStats.totalLikes} Icon={Heart} accent={C.rose} delay={0} />
+        <StatCard label="Comments" value={engagementStats.totalComments} Icon={MessageCircle} accent={C.violet} delay={0.06} />
         <StatCard label="Audience" value={DEMO_AUDIENCE.length} Icon={Users} accent={C.teal} delay={0.12} />
         <StatCard label="Revenue" value={`₦${revenue.toLocaleString()}`} Icon={DollarSign} accent={C.gold} delay={0.18} />
       </div>
@@ -235,8 +294,8 @@ const Overview = ({ allContent, engagement }) => {
       <div className="space-y-1">
         {SPACES.map((s, i) => {
           const items = allContent.filter(c => c.spaceId === s.id);
-          const likes = items.reduce((sum, it) => sum + (engagement[it.id]?.likes || 0), 0);
-          const comments = items.reduce((sum, it) => sum + (engagement[it.id]?.comments?.length || 0), 0);
+          const stats = spaceEngagement[s.id] || { likes: 0, comments: 0 };
+          
           return (
             <motion.div key={s.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
               className="flex items-center justify-between py-3.5 px-4 rounded-xl"
@@ -249,8 +308,8 @@ const Overview = ({ allContent, engagement }) => {
                 <span className="font-body text-[13px]" style={{ color: C.dim }}>{s.title}</span>
               </div>
               <div className="flex items-center gap-5 font-body text-[12px]" style={{ color: C.faint }}>
-                <span className="flex items-center gap-1"><Heart size={12} /> {likes}</span>
-                <span className="flex items-center gap-1"><MessageCircle size={12} /> {comments}</span>
+                <span className="flex items-center gap-1"><Heart size={12} /> {stats.likes}</span>
+                <span className="flex items-center gap-1"><MessageCircle size={12} /> {stats.comments}</span>
                 <span>{items.length} uploads</span>
               </div>
             </motion.div>
