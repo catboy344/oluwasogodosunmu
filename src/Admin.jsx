@@ -438,43 +438,44 @@ const UploadContent = ({ onUpload }) => {
     alert("✅ Google Drive PDF linked successfully!");
   };
 
-  // 🔥 FIXED: Handle Cloudinary file upload
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFileName(file.name);
+// 🔥 FIXED: Handle Cloudinary file upload for PDFs
+const handleFileUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setFileName(file.name);
+  
+  try {
+    const isPDF = file.type === 'application/pdf' || file.name.endsWith('.pdf');
     
-    try {
-      const isPDF = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-      const resourceType = isPDF ? 'raw' : 'auto';
-      const uploadType = isPDF ? 'raw' : 'upload';
-      
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_PRESET);
-      formData.append("folder", "content");
-      
-      // 🔥 FIX: Don't append resource_type for raw uploads
-      const url = isPDF
-        ? `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/raw/upload`
-        : `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${uploadType}/upload`;
-      
-      const res = await fetch(url, { method: "POST", body: formData });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error?.message || "Upload failed");
-      }
-      
-      const data = await res.json();
-      console.log("✅ File uploaded:", data.secure_url);
-      setFileUrl(data.secure_url);
-      setError("");
-    } catch (err) {
-      console.error("File upload error:", err);
-      setError("File upload failed: " + err.message);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_PRESET);
+    formData.append("folder", "content");
+    
+    let uploadUrl;
+    if (isPDF) {
+      // 🔥 PDFs use 'raw' upload type
+      uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/raw/upload`;
+    } else {
+      uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/upload`;
     }
-  };
+    
+    const res = await fetch(uploadUrl, { method: "POST", body: formData });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error?.message || "Upload failed");
+    }
+    
+    const data = await res.json();
+    console.log("✅ File uploaded:", data.secure_url);
+    setFileUrl(data.secure_url);
+    setError("");
+  } catch (err) {
+    console.error("File upload error:", err);
+    setError("File upload failed: " + err.message);
+  }
+};
 
   // Handle image upload
   const handleImageUpload = async (e) => {
